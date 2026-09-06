@@ -1,3 +1,10 @@
+## [0.1.3](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.2...0.1.3) (2026-09-06)
+
+
+### Bug Fixes
+
+* use specs-go MinimumRequiredVersion for CDI ([1378974](https://github.com/gclawes/rockchip-dra-driver/commit/137897482fb4d2318ad6d49186c2c7551c277da8))
+
 ## [0.1.2](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.1...0.1.2) (2026-09-06)
 
 
