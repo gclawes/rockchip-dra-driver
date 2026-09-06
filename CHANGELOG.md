@@ -1,3 +1,10 @@
+## [0.1.2](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.1...0.1.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* **ci:** use kind 0.33 and disable govet inline ([3f16516](https://github.com/gclawes/rockchip-dra-driver/commit/3f16516acc9d53013cbca848c1d5661e6b8ae545))
+
 ## [0.1.1](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.0...0.1.1) (2026-09-06)
 
 
