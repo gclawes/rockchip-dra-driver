@@ -1,3 +1,10 @@
+## [0.1.4](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.3...0.1.4) (2026-09-06)
+
+
+### Bug Fixes
+
+* **discovery:** detect rocket via bound NPU cores ([4e0e62c](https://github.com/gclawes/rockchip-dra-driver/commit/4e0e62cf147c5ac7d050dcbc207b201c179c5be8))
+
 ## [0.1.3](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.2...0.1.3) (2026-09-06)
 
 
