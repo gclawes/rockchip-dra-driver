@@ -1,0 +1,149 @@
+/*
+ * Copyright The Kubernetes Authors.
+ * Copyright 2026 Graeme Lawes.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	resourceapi "k8s.io/api/resource/v1"
+	"k8s.io/apimachinery/pkg/types"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	coreclientset "k8s.io/client-go/kubernetes"
+	"k8s.io/dynamic-resource-allocation/kubeletplugin"
+	"k8s.io/klog/v2"
+
+	"github.com/gclawes/rockchip-dra-driver/pkg/metrics"
+)
+
+type driver struct {
+	client    coreclientset.Interface
+	helper    *kubeletplugin.Helper
+	state     *DeviceState
+	cancelCtx func(error)
+}
+
+func NewDriver(ctx context.Context, config *Config) (*driver, error) {
+	d := &driver{
+		client:    config.coreclient,
+		cancelCtx: config.cancelMainCtx,
+	}
+
+	state, err := NewDeviceState(config)
+	if err != nil {
+		return nil, err
+	}
+	d.state = state
+
+	helper, err := kubeletplugin.Start(ctx, d,
+		kubeletplugin.KubeClient(config.coreclient),
+		kubeletplugin.NodeName(config.flags.nodeName),
+		kubeletplugin.DriverName(config.flags.driverName),
+		kubeletplugin.RegistrarDirectoryPath(config.flags.kubeletRegistrarDirectoryPath),
+		kubeletplugin.PluginDataDirectoryPath(config.DriverPluginPath()),
+		kubeletplugin.RollingUpdate(types.UID(config.flags.podUID)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	d.helper = helper
+
+	if err := helper.PublishResources(ctx, state.driverResources); err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func (d *driver) Shutdown(logger klog.Logger) error {
+	d.helper.Stop()
+	return nil
+}
+
+func (d *driver) PrepareResourceClaims(ctx context.Context, claims []*resourceapi.ResourceClaim) (map[types.UID]kubeletplugin.PrepareResult, error) {
+	logger := klog.FromContext(ctx)
+	logger.Info("PrepareResourceClaims is called", "numClaims", len(claims))
+	result := make(map[types.UID]kubeletplugin.PrepareResult)
+	for _, claim := range claims {
+		result[claim.UID] = d.prepareResourceClaim(ctx, claim)
+	}
+	return result, nil
+}
+
+func (d *driver) prepareResourceClaim(ctx context.Context, claim *resourceapi.ResourceClaim) (result kubeletplugin.PrepareResult) {
+	logger := klog.FromContext(ctx)
+	start := time.Now()
+	defer func() {
+		metrics.ObservePrepareClaim(result.Err, time.Since(start))
+	}()
+
+	preparedDevices, err := d.state.Prepare(ctx, claim)
+	if err != nil {
+		logger.Error(err, "Error preparing devices for claim", "uid", claim.UID)
+		return kubeletplugin.PrepareResult{Err: fmt.Errorf("error preparing devices for claim %v: %w", claim.UID, err)}
+	}
+
+	var prepared []kubeletplugin.Device
+	for _, pd := range preparedDevices {
+		prepared = append(prepared, kubeletplugin.Device{
+			Requests:     pd.RequestNames,
+			PoolName:     pd.PoolName,
+			DeviceName:   pd.DeviceName,
+			CDIDeviceIDs: pd.CDIDeviceIDs,
+			ShareID:      pd.ShareID,
+		})
+	}
+	return kubeletplugin.PrepareResult{Devices: prepared}
+}
+
+func (d *driver) UnprepareResourceClaims(ctx context.Context, claims []kubeletplugin.NamespacedObject) (map[types.UID]error, error) {
+	logger := klog.FromContext(ctx)
+	logger.Info("UnprepareResourceClaims is called", "numClaims", len(claims))
+	result := make(map[types.UID]error)
+	for _, claim := range claims {
+		result[claim.UID] = d.unprepareResourceClaim(ctx, claim)
+	}
+	return result, nil
+}
+
+func (d *driver) unprepareResourceClaim(_ context.Context, claim kubeletplugin.NamespacedObject) (err error) {
+	start := time.Now()
+	defer func() {
+		metrics.ObserveUnprepareClaim(err, time.Since(start))
+	}()
+	if err = d.state.Unprepare(claim.UID); err != nil {
+		return fmt.Errorf("error unpreparing devices for claim %v: %w", claim.UID, err)
+	}
+	return nil
+}
+
+func (d *driver) WatchHealthStatus(_ context.Context, _ chan<- kubeletplugin.DeviceHealthReport) error {
+	return kubeletplugin.ErrHealthNotSupported
+}
+
+func (d *driver) HandleError(ctx context.Context, err error, msg string) {
+	utilruntime.HandleErrorWithContext(ctx, err, msg)
+	if !errors.Is(err, kubeletplugin.ErrRecoverable) {
+		metrics.FatalBackgroundErrorsTotal.Inc()
+		if d.cancelCtx != nil {
+			d.cancelCtx(fmt.Errorf("fatal background error: %w", err))
+		}
+	}
+}
