@@ -1,3 +1,10 @@
+## [0.1.5](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.4...0.1.5) (2026-09-06)
+
+
+### Bug Fixes
+
+* **helm:** allow install on kubernetes 1.35 ([754d67b](https://github.com/gclawes/rockchip-dra-driver/commit/754d67b2de3099fe262ee8d7f2e372e00a6c0f6e))
+
 ## [0.1.4](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.3...0.1.4) (2026-09-06)
 
 
