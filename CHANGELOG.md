@@ -1,3 +1,10 @@
+## [0.1.1](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.0...0.1.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* unblock lint and e2e setup ([5f7e41b](https://github.com/gclawes/rockchip-dra-driver/commit/5f7e41b27bae11ccc79d6a3a65af2e4cb5d36c4f))
+
 # [0.1.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.0.0...0.1.0) (2026-09-06)
 
 
