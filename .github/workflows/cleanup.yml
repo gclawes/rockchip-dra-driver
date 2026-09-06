@@ -27,7 +27,7 @@ on:
 jobs:
   cleanup-pr:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       packages: write
     steps:
@@ -41,7 +41,7 @@ jobs:
 
   cleanup-branch:
     if: (github.event_name == 'delete' && github.event.ref_type == 'branch') || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     permissions:
       packages: write
     steps:
