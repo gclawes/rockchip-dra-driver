@@ -50,13 +50,17 @@ func detectSoC(sysfsRoot string) string {
 }
 
 func ueventDriver(path string) string {
+	return ueventValue(path, "DRIVER")
+}
+
+func ueventValue(path, key string) string {
 	data, err := os.ReadFile(filepath.Join(path, "uevent"))
 	if err != nil {
 		return ""
 	}
 	for _, line := range strings.Split(string(data), "\n") {
-		key, val, ok := strings.Cut(line, "=")
-		if ok && key == "DRIVER" {
+		k, val, ok := strings.Cut(line, "=")
+		if ok && k == key {
 			return strings.TrimSpace(val)
 		}
 	}

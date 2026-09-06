@@ -63,7 +63,10 @@ func TestMockEnumerateDisableGPU(t *testing.T) {
 func TestSysfsEnumerate(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "firmware/devicetree/base/compatible"), "rockchip,rk3588\x00rockchip,rk3588-rock-5b\x00")
-	writeFile(t, filepath.Join(root, "class/accel/accel0/uevent"), "DRIVER=rocket\n")
+	// Real rocket (RK3588 / Turing RK1): accel class uevent has no DRIVER=,
+	// the parent is unbound platform:rknn, and DRIVER=rocket is on the cores.
+	writeFile(t, filepath.Join(root, "class/accel/accel0/uevent"), "MAJOR=261\nMINOR=0\nDEVNAME=accel/accel0\nDEVTYPE=accel_minor\n")
+	writeFile(t, filepath.Join(root, "class/accel/accel0/device/uevent"), "MODALIAS=platform:rknn\n")
 	writeFile(t, filepath.Join(root, "bus/platform/drivers/rocket/fdab0000.npu"), "")
 	writeFile(t, filepath.Join(root, "bus/platform/drivers/rocket/fdac0000.npu"), "")
 	writeFile(t, filepath.Join(root, "bus/platform/drivers/rocket/fdad0000.npu"), "")
@@ -85,8 +88,41 @@ func TestSysfsEnumerate(t *testing.T) {
 	if devs[0].SoC != "rk3588" || devs[0].KMD != consts.KMDRocket || devs[0].CoreCount != 3 {
 		t.Fatalf("unexpected NPU: %+v", devs[0])
 	}
+	if devs[0].DeviceNode != filepath.Join(devRoot, "accel/accel0") {
+		t.Fatalf("unexpected NPU node: %+v", devs[0])
+	}
 	if devs[1].KMD != consts.KMDPanthor || devs[1].Model != "Mali-G610" {
 		t.Fatalf("unexpected GPU: %+v", devs[1])
+	}
+}
+
+func TestAccelWithoutRocketOmitsNPU(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "firmware/devicetree/base/compatible"), "rockchip,rk3588\x00")
+	writeFile(t, filepath.Join(root, "class/accel/accel0/uevent"), "DEVNAME=accel/accel0\n")
+	devRoot := t.TempDir()
+	writeFile(t, filepath.Join(devRoot, "accel/accel0"), "")
+
+	devs, err := Enumerate(Config{SysfsRoot: root, DevRoot: devRoot, NPUEnabled: true, GPUEnabled: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(devs) != 0 {
+		t.Fatalf("expected no NPU without bound rocket cores, got %+v", devs)
+	}
+}
+
+func TestRocketCoresWithoutAccelClass(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "firmware/devicetree/base/compatible"), "rockchip,rk3588\x00")
+	writeFile(t, filepath.Join(root, "bus/platform/drivers/rocket/fdab0000.npu"), "")
+
+	devs, err := Enumerate(Config{SysfsRoot: root, DevRoot: t.TempDir(), NPUEnabled: true, GPUEnabled: false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(devs) != 1 || devs[0].DeviceNode != "/dev/accel/accel0" || devs[0].CoreCount != 1 {
+		t.Fatalf("expected fallback accel node, got %+v", devs)
 	}
 }
 
