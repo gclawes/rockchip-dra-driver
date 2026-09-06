@@ -1,0 +1,79 @@
+# Copyright 2024 Graeme Lawes
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Pre-Release Build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: pre-release-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Fork PRs cannot write to this repo's GHCR; lint/test/e2e still run in ci.yml.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check if skip
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          PRIMARY_REGEX="^(master|main|next|next-major|alpha|beta|[0-9]+(\.[0-9]+)?(\.x)?)$"
+          if [[ "${{ github.ref_name }}" =~ $PRIMARY_REGEX ]]; then
+            echo "Skipping pre-release build on primary/maintenance branch"
+            exit 1
+          fi
+          SEMVER_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+          if [[ "${{ github.ref_name }}" =~ $SEMVER_REGEX ]]; then
+            echo "Skipping pre-release build on semver tags"
+            exit 1
+          fi
+      - name: Calculate version
+        id: version
+        run: |
+          GIT_DESC=$(git describe --tags --always --dirty)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUM=${{ github.event.number }}
+            VERSION="${GIT_DESC}-pr-${PR_NUM}"
+          else
+            BRANCH=$(echo "${{ github.ref_name }}" | sed 's|[/_]|-|g')
+            VERSION="${GIT_DESC}-branch-${BRANCH}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      - name: Build and push
+        env:
+          GIT_TAG: ${{ steps.version.outputs.version }}
+          PLATFORMS: linux/arm64
+          DRIVER_IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+          DRIVER_CHART_REGISTRY: ghcr.io/${{ github.repository }}/charts
+          CONTAINER_TOOL: docker
+        run: make push-release-artifacts
