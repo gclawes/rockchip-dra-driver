@@ -30,6 +30,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     permissions:
       packages: write
+      actions: write
     steps:
       - name: Cleanup GHCR artifacts for closed PR
         uses: dataaxiom/ghcr-cleanup-action@v1
@@ -44,6 +45,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     permissions:
       packages: write
+      actions: write
     steps:
       - name: Normalize branch name
         id: normalize
