@@ -1,0 +1,17 @@
+.cache/
+vendor/
+[._]*.sw[a-p]
+
+*.tgz
+coverage.out
+coverage.out.no-mocks
+logcheck
+
+# Ignore config telemetry files
+.config/
+
+# Ignore .bin files
+.bin/
+
+dist/
+artifacts/
