@@ -25,34 +25,12 @@ import (
 )
 
 func discoverNPU(cfg Config, soc string) []Device {
-	accelDir := filepath.Join(cfg.SysfsRoot, "class", "accel")
-	entries, err := os.ReadDir(accelDir)
-	if err != nil {
-		return nil
-	}
-
-	var nodes []string
-	for _, e := range entries {
-		name := e.Name()
-		if !strings.HasPrefix(name, "accel") {
-			continue
-		}
-		classPath := filepath.Join(accelDir, name)
-		if ueventDriver(classPath) != consts.KMDRocket && ueventDriver(filepath.Join(classPath, "device")) != consts.KMDRocket {
-			continue
-		}
-		devNode := filepath.Join(cfg.DevRoot, "accel", name)
-		if !exists(devNode) {
-			// Still advertise: the node may appear after udev.
-			devNode = filepath.Join("/dev/accel", name)
-		}
-		nodes = append(nodes, devNode)
-	}
-	if len(nodes) == 0 {
-		return nil
-	}
-
 	cores := countRocketCores(cfg.SysfsRoot)
+	if cores == 0 {
+		return nil
+	}
+
+	devNode := rocketAccelNode(cfg)
 	maxAlloc := int64(cfg.NPUMaxAllocations)
 	if maxAlloc <= 0 {
 		maxAlloc = defaultNPUMaxAllocations(soc, cores)
@@ -66,9 +44,58 @@ func discoverNPU(cfg Config, soc string) []Device {
 		Model:          "rknn",
 		KMD:            consts.KMDRocket,
 		CoreCount:      cores,
-		DeviceNode:     nodes[0],
+		DeviceNode:     devNode,
 		MaxAllocations: maxAlloc,
 	}}
+}
+
+// rocketAccelNode returns the DRM accel char device for rocket.
+//
+// Mainline rocket binds DRIVER=rocket on the per-core platform devices
+// (fdab0000.npu, …), not on the accel class node. The char device hangs off an
+// unbound parent (platform:rknn) whose uevent has no DRIVER= key. Presence of
+// bound cores is the KMD check; this only locates /dev/accel/accel*.
+func rocketAccelNode(cfg Config) string {
+	accelDir := filepath.Join(cfg.SysfsRoot, "class", "accel")
+	entries, err := os.ReadDir(accelDir)
+	if err != nil {
+		return "/dev/accel/accel0"
+	}
+
+	var fallback string
+	for _, e := range entries {
+		name := e.Name()
+		if !strings.HasPrefix(name, "accel") {
+			continue
+		}
+		classPath := filepath.Join(accelDir, name)
+		devNode := filepath.Join(cfg.DevRoot, "accel", name)
+		if !exists(devNode) {
+			// Still advertise: the node may appear after udev.
+			devNode = filepath.Join("/dev/accel", name)
+		}
+		if fallback == "" {
+			fallback = devNode
+		}
+		if isRocketAccel(classPath) {
+			return devNode
+		}
+	}
+	if fallback != "" {
+		return fallback
+	}
+	return "/dev/accel/accel0"
+}
+
+func isRocketAccel(classPath string) bool {
+	if ueventDriver(classPath) == consts.KMDRocket {
+		return true
+	}
+	device := filepath.Join(classPath, "device")
+	if ueventDriver(device) == consts.KMDRocket {
+		return true
+	}
+	return strings.Contains(strings.ToLower(ueventValue(device, "MODALIAS")), "rknn")
 }
 
 func countRocketCores(sysfsRoot string) int64 {
