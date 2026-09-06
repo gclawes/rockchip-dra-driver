@@ -4,4 +4,4 @@ description: Kubernetes DRA driver for Rockchip NPU and GPU (mainline rocket + p
 type: application
 version: "0.1.4"
 appVersion: "0.1.4"
-kubeVersion: ">=1.36.0-0"
+kubeVersion: ">=1.35.0-0"
