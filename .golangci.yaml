@@ -10,6 +10,10 @@ linters:
     - godot
     - misspell
     - staticcheck
+  settings:
+    govet:
+      disable:
+        - inline
   exclusions:
     generated: lax
     presets:

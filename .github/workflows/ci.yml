@@ -57,7 +57,7 @@ jobs:
         sudo snap install helm --classic
         sudo snap install kubectl --classic
     - name: Install kind
-      run: go install sigs.k8s.io/kind@v0.30.0
+      run: go install sigs.k8s.io/kind@v0.33.0
     - name: Setup e2e
       run: make setup-e2e
     - name: Run e2e test
