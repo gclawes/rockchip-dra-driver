@@ -60,11 +60,11 @@ func (cdi *CDIHandler) CreateClaimSpecFile(claimUID string, devices []preparedDe
 		})
 	}
 
-	minVersion, err := cdiapi.MinimumRequiredVersion(spec)
+	var err error
+	spec.Version, err = cdiapi.MinimumRequiredVersion(spec)
 	if err != nil {
 		return fmt.Errorf("failed to get minimum required CDI spec version: %w", err)
 	}
-	spec.Version = minVersion
 	return cdi.cache.WriteSpec(spec, specName)
 }
 

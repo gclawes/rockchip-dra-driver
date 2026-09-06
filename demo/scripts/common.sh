@@ -26,7 +26,7 @@ SCRIPTS_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 : ${KIND_K8S_TAG:="v1.37.0"}
 : ${KIND_IMAGE:="kindest/node:${KIND_K8S_TAG}"}
 
-if [[ -z "${CONTAINER_TOOL}" ]]; then
+if [[ -z "${CONTAINER_TOOL:-}" ]]; then
     if command -v docker >/dev/null 2>&1; then
         CONTAINER_TOOL=docker
     elif command -v podman >/dev/null 2>&1; then
