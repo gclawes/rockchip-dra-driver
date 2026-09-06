@@ -1,0 +1,59 @@
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+selectorLabelsOverride: {}
+
+driverName: dra.rockchip.com
+
+npu:
+  enabled: true
+  # 0 = SoC-aware default (RK3588 → 3).
+  maxAllocations: 0
+  deviceClass:
+    name: npu.rockchip.com
+    extendedResourceName: ""
+
+gpu:
+  enabled: true
+  # 0 = default of 8 concurrent allocations.
+  maxAllocations: 0
+  deviceClass:
+    name: gpu.rockchip.com
+    extendedResourceName: ""
+
+# Advertise a synthetic RK3588 NPU+GPU instead of reading sysfs.
+# Enable for kind e2e; leave false on hardware.
+mockDevices: false
+
+imagePullSecrets: []
+image:
+  repository: ghcr.io/gclawes/rockchip-dra-driver
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+kubeletPlugin:
+  priorityClassName: "system-node-critical"
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  podAnnotations: {}
+  podSecurityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  kubeletRegistrarDirectoryPath: /var/lib/kubelet/plugins_registry
+  kubeletPluginsDirectoryPath: /var/lib/kubelet/plugins
+  containers:
+    plugin:
+      securityContext:
+        privileged: true
+      resources: {}
+      healthcheckPort: -1
+      metricsPort: 8080

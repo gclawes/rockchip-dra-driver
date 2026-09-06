@@ -1,0 +1,7 @@
+apiVersion: v2
+name: rockchip-dra-driver
+description: Kubernetes DRA driver for Rockchip NPU and GPU (mainline rocket + panthor)
+type: application
+version: 0.0.0-dev
+appVersion: "0.0.0-dev"
+kubeVersion: ">=1.36.0-0"

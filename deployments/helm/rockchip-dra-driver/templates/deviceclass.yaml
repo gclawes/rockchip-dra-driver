@@ -1,0 +1,28 @@
+{{- if .Values.npu.enabled }}
+---
+apiVersion: {{ include "rockchip-dra-driver.resourceApiVersion" . }}
+kind: DeviceClass
+metadata:
+  name: {{ .Values.npu.deviceClass.name }}
+spec:
+  selectors:
+  - cel:
+      expression: "device.driver == '{{ include "rockchip-dra-driver.driverName" . }}' && device.attributes['{{ include "rockchip-dra-driver.driverName" . }}'].type == 'npu'"
+  {{- with .Values.npu.deviceClass.extendedResourceName }}
+  extendedResourceName: {{ . | quote }}
+  {{- end }}
+{{- end }}
+{{- if .Values.gpu.enabled }}
+---
+apiVersion: {{ include "rockchip-dra-driver.resourceApiVersion" . }}
+kind: DeviceClass
+metadata:
+  name: {{ .Values.gpu.deviceClass.name }}
+spec:
+  selectors:
+  - cel:
+      expression: "device.driver == '{{ include "rockchip-dra-driver.driverName" . }}' && device.attributes['{{ include "rockchip-dra-driver.driverName" . }}'].type == 'gpu'"
+  {{- with .Values.gpu.deviceClass.extendedResourceName }}
+  extendedResourceName: {{ . | quote }}
+  {{- end }}
+{{- end }}
