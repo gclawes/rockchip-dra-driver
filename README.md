@@ -20,7 +20,8 @@ conventions.
 
 ## Requirements
 
-- Kubernetes **1.36+** (consumable capacity enabled by default)
+- Kubernetes **1.35+**. Consumable capacity (`DRAConsumableCapacity`) is
+  required; it is alpha and off by default in 1.35, and beta default-on in 1.36+.
 - Linux **6.18+** for rocket (NPU); **6.10+** for panthor (GPU)
 - Container runtime with [CDI](https://github.com/cncf-tags/container-device-interface) support
 

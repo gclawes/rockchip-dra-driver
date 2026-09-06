@@ -19,8 +19,9 @@ for Rockchip accelerators.
 - Future device types (RGA, VPU, …) should be additional `type` values under
   the same DRA driver (`dra.rockchip.com`), not a new API group.
 
-Minimum cluster version is Kubernetes **1.36**. Develop against the latest
-Kubernetes release's client libraries.
+Minimum cluster version is Kubernetes **1.35** with `DRAConsumableCapacity`
+enabled (alpha, off by default). 1.36+ has that gate on by default. Develop
+against the latest Kubernetes release's client libraries.
 
 ## Layout
 
