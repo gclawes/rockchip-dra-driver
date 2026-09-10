@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/types"
 	cdiapi "tags.cncf.io/container-device-interface/pkg/cdi"
@@ -103,12 +104,12 @@ func uidString(id *types.UID) string {
 }
 
 func deviceEdits(d discovery.Device, mock bool) cdispec.ContainerEdits {
+	prefix := "DRA_ROCKCHIP_" + strings.ToUpper(d.Type)
 	edits := cdispec.ContainerEdits{
 		Env: []string{
-			fmt.Sprintf("DRA_ROCKCHIP_TYPE=%s", d.Type),
 			fmt.Sprintf("DRA_ROCKCHIP_SOC=%s", d.SoC),
-			fmt.Sprintf("DRA_ROCKCHIP_KMD=%s", d.KMD),
-			fmt.Sprintf("DRA_ROCKCHIP_DEVICE=%s", d.DeviceNode),
+			fmt.Sprintf("%s_KMD=%s", prefix, d.KMD),
+			fmt.Sprintf("%s_DEVICE=%s", prefix, d.DeviceNode),
 		},
 	}
 	if !mock && d.DeviceNode != "" {
