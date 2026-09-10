@@ -34,6 +34,7 @@ pkg/metrics/                          Prometheus metrics
 deployments/helm/rockchip-dra-driver/ Helm chart (DeviceClasses, DaemonSet)
 deployments/container/                image build
 demo/scripts/                         image/chart push helpers
+examples/                             deployable NPU/GPU workload manifests
 test/e2e/                             kind e2e (mock discovery)
 docs/upstream.md                      notes on upstream tracking
 ```

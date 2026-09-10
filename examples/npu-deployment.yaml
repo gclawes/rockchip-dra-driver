@@ -1,0 +1,58 @@
+# Copyright 2026 Graeme Lawes.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# One replica claiming a share of the node NPU (accel/rocket).
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: npu-example
+spec:
+  spec:
+    devices:
+      requests:
+      - name: npu
+        exactly:
+          deviceClassName: npu.rockchip.com
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: npu-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: npu-example
+  template:
+    metadata:
+      labels:
+        app: npu-example
+    spec:
+      resourceClaims:
+      - name: npu
+        resourceClaimTemplateName: npu-example
+      containers:
+      - name: app
+        image: debian:bookworm-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "=== DRA env ==="
+          env | grep DRA_ROCKCHIP || true
+          echo "=== devices ==="
+          ls -l /dev/accel 2>/dev/null || true
+          sleep infinity
+        resources:
+          claims:
+          - name: npu

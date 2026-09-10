@@ -47,20 +47,8 @@ Helm knobs:
 DeviceClasses: `npu.rockchip.com`, `gpu.rockchip.com`. Driver name:
 `dra.rockchip.com`.
 
-Example claim:
-
-```yaml
-apiVersion: resource.k8s.io/v1
-kind: ResourceClaim
-metadata:
-  name: npu
-spec:
-  devices:
-    requests:
-    - name: npu
-      exactly:
-        deviceClassName: npu.rockchip.com
-```
+Deployable `Deployment` examples (NPU, GPU, both, and shared NPU replicas)
+are in [`examples/`](examples/).
 
 ## Development
 

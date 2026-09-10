@@ -1,0 +1,60 @@
+# Copyright 2026 Graeme Lawes.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Three replicas, each consuming one NPU share. On RK3588 the default cap is 3,
+# so these fit on a single node. A fourth replica stays Pending until a share
+# is free or another node has capacity.
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: npu-shared-example
+spec:
+  spec:
+    devices:
+      requests:
+      - name: npu
+        exactly:
+          deviceClassName: npu.rockchip.com
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: npu-shared-example
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: npu-shared-example
+  template:
+    metadata:
+      labels:
+        app: npu-shared-example
+    spec:
+      resourceClaims:
+      - name: npu
+        resourceClaimTemplateName: npu-shared-example
+      containers:
+      - name: app
+        image: debian:bookworm-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "=== DRA env ==="
+          env | grep DRA_ROCKCHIP || true
+          echo "=== devices ==="
+          ls -l /dev/accel 2>/dev/null || true
+          sleep infinity
+        resources:
+          claims:
+          - name: npu
