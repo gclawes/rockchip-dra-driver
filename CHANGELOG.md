@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.5...0.2.0) (2026-09-11)
+
+
+### Features
+
+* scope CDI env vars by device type ([06bba6b](https://github.com/gclawes/rockchip-dra-driver/commit/06bba6b80081c6a8956da0d5e30d9f8755912f27))
+
 ## [0.1.5](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.4...0.1.5) (2026-09-06)
 
 
