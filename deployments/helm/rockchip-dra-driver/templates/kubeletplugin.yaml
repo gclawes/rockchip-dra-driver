@@ -42,7 +42,7 @@ spec:
           {{- toYaml .Values.kubeletPlugin.containers.plugin.securityContext | nindent 10 }}
         image: {{ include "rockchip-dra-driver.fullimage" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["kubeletplugin"]
+        command: ["/usr/bin/kubeletplugin"]
         resources:
           {{- toYaml .Values.kubeletPlugin.containers.plugin.resources | nindent 10 }}
         {{- if (gt (int .Values.kubeletPlugin.containers.plugin.metricsPort) 0) }}
