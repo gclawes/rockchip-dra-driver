@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.2.0...0.3.0) (2026-09-13)
+
+
+### Features
+
+* use distroless static debian13 as the runtime image ([b509ad7](https://github.com/gclawes/rockchip-dra-driver/commit/b509ad7f3bbd7907423bd56a524b3840e4b5e7cd))
+
 # [0.2.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.1.5...0.2.0) (2026-09-11)
 
 
