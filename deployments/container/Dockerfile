@@ -20,6 +20,7 @@ FROM golang:${GO_VERSION} AS build
 WORKDIR /build
 COPY . .
 
+ENV CGO_ENABLED=0
 RUN mkdir /artifacts
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -36,3 +37,4 @@ LABEL summary="Kubernetes DRA driver for Rockchip NPU and GPU"
 LABEL description="Mainline rocket NPU and panthor GPU DRA driver"
 
 COPY --from=build /artifacts/kubeletplugin /usr/bin/kubeletplugin
+ENTRYPOINT ["/usr/bin/kubeletplugin"]

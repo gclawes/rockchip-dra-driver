@@ -26,7 +26,7 @@ endif
 
 IMAGE_TAG := $(VERSION)
 IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
-BASE_IMAGE ?= docker.io/ubuntu:22.04
+BASE_IMAGE ?= gcr.io/distroless/static-debian13
 
 UNAME_M ?= $(shell uname -m)
 ifeq ($(UNAME_M),x86_64)
