@@ -15,8 +15,8 @@ alongside this driver if you need exclusive CPU pinning.
 
 ## Status
 
-Pre-1.0. The public API is not stable. See [AGENTS.md](AGENTS.md) for project
-conventions.
+Pre-1.0. The public API is not stable. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for how to send changes and [AGENTS.md](AGENTS.md) for project conventions.
 
 ## Requirements
 
@@ -57,6 +57,11 @@ make cmds
 make test
 make setup-e2e test-e2e teardown-e2e   # kind + mock devices
 ```
+
+Releases are automated with [semantic-release](https://semantic-release.org/)
+from Angular conventional commits (`feat:`, `fix:`, …). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the commit format and what cuts a
+version.
 
 ## License
 
