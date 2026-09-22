@@ -1,4 +1,5 @@
-# Copyright 2022 The Kubernetes Authors.
+#!/usr/bin/env bash
+
 # Copyright 2026 Graeme Lawes.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Keep in sync with .devcontainer/Dockerfile GO_VERSION.
-GO_VERSION ?= 1.26.2
+set -euo pipefail
 
-DRIVER_NAME := rockchip-dra-driver
-MODULE := github.com/gclawes/$(DRIVER_NAME)
+echo "==> rockchip-dra-driver devcontainer post-create"
 
-VERSION  ?=
-vVERSION := v$(VERSION:v%=%)
+echo "==> tool smoke checks"
+go version
+golangci-lint version
+kubectl version --client
+helm version --short
+kind version
+gh --version | head -1
+yq --version
+command -v ssh
+command -v gcc
 
-APIS := $(CURDIR)/api/resource.rockchip.com/v1alpha1
-
-ifeq ($(IMAGE_NAME),)
-REGISTRY ?= ghcr.io/gclawes
-IMAGE_NAME = $(REGISTRY)/$(DRIVER_NAME)
-endif
+echo "==> post-create complete"

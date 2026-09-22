@@ -52,11 +52,21 @@ are in [`examples/`](examples/).
 
 ## Development
 
+Go, lint, and cluster tools run in the [devcontainer](.devcontainer/README.md),
+not on the host. From the repo root:
+
 ```bash
-make cmds
-make test
-make setup-e2e test-e2e teardown-e2e   # kind + mock devices
+devcontainer up --workspace-folder .
+devcontainer exec --workspace-folder . make test
 ```
+
+Add `--docker-path podman` when the engine is Podman, not Docker. Do not
+hard-code that flag for Docker. See [`.devcontainer/README.md`](.devcontainer/README.md).
+
+Once inside the container: `make cmds`, `make test`, `make lint`.
+
+Kind e2e (`make setup-e2e test-e2e teardown-e2e`) needs the host container
+engine. CI runs it with mock devices.
 
 Releases are automated with [semantic-release](https://semantic-release.org/)
 from Angular conventional commits (`feat:`, `fix:`, …). See
