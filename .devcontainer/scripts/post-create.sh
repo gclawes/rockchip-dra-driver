@@ -20,13 +20,7 @@ echo "==> rockchip-dra-driver devcontainer post-create"
 
 echo "==> tool smoke checks"
 go version
-golangci-lint version
+command -v golangci-lint helm gh yq ssh gcc
 kubectl version --client
-helm version --short
-kind version
-gh --version | head -1
-yq --version
-command -v ssh
-command -v gcc
 
 echo "==> post-create complete"

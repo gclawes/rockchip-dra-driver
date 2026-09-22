@@ -2,7 +2,7 @@
   "name": "rockchip-dra-driver",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": ".",
+    "context": "..",
     "args": {
       "USERNAME": "vscode",
       "USER_UID": "1000",

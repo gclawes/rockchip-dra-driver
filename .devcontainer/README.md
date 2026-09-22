@@ -11,14 +11,12 @@ alignment uses the portable `updateRemoteUserUID` setting.
 
 | Tool | Purpose |
 |------|---------|
-| `go` 1.26.2 | Toolchain. Pin matches `common.mk`. `GOTOOLCHAIN=local`. |
+| `go` | Toolchain from the `go` / `toolchain` line in `go.mod`. `GOTOOLCHAIN=local`. |
 | `gcc` | `go test -race` (cgo) |
-| `golangci-lint` | `make lint` |
-| `kubectl`, `helm` | Inspect a running cluster and the chart |
-| `kind` | Kind binary. Creating a cluster still needs a host engine (see below). |
+| `golangci-lint`, `helm`, `gh`, `yq`, `jq` | Current Fedora packages |
+| `kubectl` | Current Kubernetes stable release (not packaged in Fedora) |
 | `ssh` | Debug nodes. Host `~/.ssh` and the SSH agent are mounted. |
-| `gh`, `jq`, `yq`, `git`, `make` | QoL and the Makefile |
-| `vim` | Editor inside the container |
+| `git`, `make` | Makefile |
 
 Host state is bind-mounted (not copied): kubeconfig, SSH, gitconfig, and
 `gh` config. Do not copy kubeconfigs or private keys into the image or the
@@ -100,9 +98,9 @@ kubeconfig (including the current context). `~/.ssh` is mounted for
 The host container engine socket is **not** mounted. Docker and Podman socket
 paths differ, and a mounted socket is root-equivalent on the host.
 
-`kind create cluster` and `make setup-e2e` / image builds therefore do not
-work inside this container. Run those on the host engine or in CI (kind e2e
-with mock devices). Do not install Go on the host to work around that.
+`kind` is not installed here. `make setup-e2e` and image builds need the
+host engine (or CI, which runs kind e2e with mock devices). Do not install
+Go on the host to work around that.
 
 ## Day-to-day commands
 
@@ -117,13 +115,17 @@ kubectl get resourceclaims -A
 ssh <node>
 ```
 
-## Updating tool versions
+## Tool versions
 
-CLI pins live as `ARG *_VERSION` in [`Dockerfile`](./Dockerfile).
-`GO_VERSION` must stay aligned with `common.mk`. `KUBECTL_VERSION` should
-stay aligned with the `k8s.io/*` modules in `go.mod`.
+Nothing is version-pinned except Go. The image reads `go.mod` at build time
+and installs that release from go.dev (`toolchain` directive if present,
+otherwise the `go` line). `go` on `PATH` is that toolchain
+(`GOTOOLCHAIN=local`), even if a Fedora `golang` package is also present as
+a dependency. Rebuild after that line changes.
 
-Rebuild the container after a pin bump.
+Other CLIs are whatever Fedora currently ships. `kubectl` uses
+`https://dl.k8s.io/release/stable.txt`. A rebuild picks up newer packages;
+there is no Renovate pin list to bump.
 
 ## Layout
 
