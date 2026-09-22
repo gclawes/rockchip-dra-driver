@@ -1,0 +1,66 @@
+{
+  "name": "rockchip-dra-driver",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+      "USERNAME": "vscode",
+      "USER_UID": "1000",
+      "USER_GID": "1000"
+    }
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "workspaceFolder": "/workspaces/rockchip-dra-driver",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/rockchip-dra-driver,type=bind",
+  "shutdownAction": "stopContainer",
+  "init": true,
+
+  "initializeCommand": "mkdir -p \"${HOME}/.kube\" \"${HOME}/.ssh\" \"${HOME}/.config/gh\" \"${HOME}/.config/rockchip-dra-devcontainer\" && touch \"${HOME}/.gitconfig\" && CA_DST=\"${HOME}/.config/rockchip-dra-devcontainer/ca.home.arpa-root_ca.pem\" && for c in /etc/pki/ca-trust/source/anchors/ca.home.arpa-root_ca.pem /usr/local/share/ca-certificates/ca.home.arpa-root_ca.crt \"${HOME}/.local/share/homelab/ca.home.arpa-root_ca.pem\"; do if [ -s \"$c\" ]; then cp \"$c\" \"$CA_DST\"; break; fi; done; [ -f \"$CA_DST\" ] || : > \"$CA_DST\"",
+
+  "containerEnv": {
+    "EDITOR": "vim",
+    "VISUAL": "vim"
+  },
+
+  "mounts": [
+    "type=bind,source=${localEnv:HOME}/.kube,target=/home/vscode/.kube",
+    "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh",
+    "type=bind,source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh",
+    "type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig",
+    "type=bind,source=${localEnv:HOME}/.config/rockchip-dra-devcontainer,target=/usr/local/share/rockchip-dra-devcontainer/host",
+    "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent.sock"
+  ],
+
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent.sock"
+  },
+
+  "postCreateCommand": "/usr/local/share/rockchip-dra-devcontainer/post-create.sh",
+  "postStartCommand": "/usr/local/share/rockchip-dra-devcontainer/post-start.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "redhat.vscode-yaml",
+        "github.vscode-pull-request-github",
+        "timonwong.shellcheck",
+        "editorconfig.editorconfig"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": false,
+        "redhat.telemetry.enabled": false,
+        "go.useLanguageServer": true,
+        "go.toolsManagement.autoUpdate": false
+      }
+    }
+  },
+
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "16gb"
+  }
+}

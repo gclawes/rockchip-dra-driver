@@ -26,6 +26,7 @@ against the latest Kubernetes release's client libraries.
 ## Layout
 
 ```
+.devcontainer/                        dev image (go, kubectl, helm, ssh)
 api/resource.rockchip.com/v1alpha1/   opaque NpuConfig / GpuConfig
 cmd/kubeletplugin/                    DRA kubelet plugin
 internal/discovery/                   sysfs + mock device enumeration
@@ -38,6 +39,52 @@ examples/                             deployable NPU/GPU workload manifests
 test/e2e/                             kind e2e (mock discovery)
 docs/upstream.md                      notes on upstream tracking
 ```
+
+## Development tools
+
+`go`, `gofmt`, `golangci-lint`, `kubectl`, `helm`, and `kind` come from the
+devcontainer. Do not install them on the host to complete a task.
+
+### Devcontainer
+
+- Preferred portable workspace: [`.devcontainer/`](.devcontainer/) (Fedora 44 image).
+- Operator guide: [`.devcontainer/README.md`](.devcontainer/README.md).
+- Host-agnostic on macOS and Aurora/Bluefin DX (Docker or Podman).
+- Host bind mounts cover kubeconfig (`~/.kube`), SSH agent + `~/.ssh`, and
+  git/`gh` config so a running cluster or node can be inspected from the
+  container. Do not copy kubeconfigs or private keys into the image or the repo.
+
+#### Running tools from an agent
+
+When a required tool is missing on the host, run it **inside the
+devcontainer**, not by installing it on the host. Prefer the container even
+when a host binary exists if the task needs the image's Go toolchain
+(`GOTOOLCHAIN=local`, aligned with `common.mk`) or the mounted cluster
+credentials.
+
+Check the image's tool list in [`.devcontainer/README.md`](.devcontainer/README.md)
+(table under **What you get**) and pins in [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile);
+do not assume a host install or invent extra packages.
+
+From the repo root:
+
+```sh
+devcontainer exec --workspace-folder . <command>
+```
+
+If the workspace uses **Podman** (not Docker), add `--docker-path podman` to
+`devcontainer` invocations (`up`, `exec`, and similar). Do not hard-code that
+flag when Docker is the engine. Detect from the environment (for example
+`docker info` vs `podman info`, or `DOCKER_HOST` pointing at a podman sock)
+or from the operator's existing `devcontainer` alias.
+
+Bring the container up first if `exec` fails because no workspace is running
+(`devcontainer up --workspace-folder .`, with `--docker-path podman` when
+applicable). Operator details stay in [`.devcontainer/README.md`](.devcontainer/README.md).
+
+Kind clusters and driver image builds need the host container engine. That
+socket is not mounted. Run those on the host engine or in CI; do not install
+Go on the host as a workaround.
 
 ## Commits (Angular / conventional commits)
 
@@ -151,6 +198,10 @@ use the Graeme Lawes header from `hack/boilerplate.go.txt`.
 
 ## Tests
 
-- Unit tests and `go test ./...` on every PR.
-- Kind e2e with mock discovery on GitHub-hosted runners.
+- Unit tests and `go test ./...` on every PR. Run them inside the devcontainer
+  (`devcontainer exec --workspace-folder . go test ./...`, with
+  `--docker-path podman` only when Podman is the engine).
+- Kind e2e with mock discovery on GitHub-hosted runners. Do not expect
+  `make setup-e2e` to work inside the devcontainer; the host engine socket
+  is not mounted.
 - Do not assume `/dev/accel` or panthor exist in CI.
