@@ -16,7 +16,7 @@
   "shutdownAction": "stopContainer",
   "init": true,
 
-  "initializeCommand": "mkdir -p \"${HOME}/.kube\" \"${HOME}/.ssh\" \"${HOME}/.config/gh\" \"${HOME}/.config/rockchip-dra-devcontainer\" && touch \"${HOME}/.gitconfig\" && CA_DST=\"${HOME}/.config/rockchip-dra-devcontainer/ca.home.arpa-root_ca.pem\" && for c in /etc/pki/ca-trust/source/anchors/ca.home.arpa-root_ca.pem /usr/local/share/ca-certificates/ca.home.arpa-root_ca.crt \"${HOME}/.local/share/homelab/ca.home.arpa-root_ca.pem\"; do if [ -s \"$c\" ]; then cp \"$c\" \"$CA_DST\"; break; fi; done; [ -f \"$CA_DST\" ] || : > \"$CA_DST\"",
+  "initializeCommand": "mkdir -p \"${HOME}/.kube\" \"${HOME}/.ssh\" \"${HOME}/.config/gh\" && touch \"${HOME}/.gitconfig\"",
 
   "containerEnv": {
     "EDITOR": "vim",
@@ -28,7 +28,6 @@
     "type=bind,source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh",
     "type=bind,source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh",
     "type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig",
-    "type=bind,source=${localEnv:HOME}/.config/rockchip-dra-devcontainer,target=/usr/local/share/rockchip-dra-devcontainer/host",
     "type=bind,source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent.sock"
   ],
 
