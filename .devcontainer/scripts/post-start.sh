@@ -40,16 +40,4 @@ elif [[ -f "${HOME}/.kube/config" && ! -r "${HOME}/.kube/config" ]]; then
   echo "warning: ~/.kube/config is not readable by $(id -un)" >&2
 fi
 
-# Optional host custom CA (for example a homelab *.home.arpa root).
-# Missing CA is not an error; public cluster APIs do not need it.
-HOST_CA="/usr/local/share/rockchip-dra-devcontainer/host/ca.home.arpa-root_ca.pem"
-if [[ -s "${HOST_CA}" ]]; then
-  if sudo cp "${HOST_CA}" /etc/pki/ca-trust/source/anchors/ca.home.arpa-root_ca.pem \
-    && sudo update-ca-trust; then
-    echo "installed host CA: ca.home.arpa-root_ca.pem"
-  else
-    echo "warning: failed to install host CA into trust store" >&2
-  fi
-fi
-
 exit 0

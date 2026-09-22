@@ -36,7 +36,7 @@ repo.
 Ensure host directories exist (the `initializeCommand` creates them if missing):
 
 ```sh
-mkdir -p ~/.kube ~/.ssh ~/.config/gh ~/.config/rockchip-dra-devcontainer
+mkdir -p ~/.kube ~/.ssh ~/.config/gh
 touch ~/.gitconfig
 ```
 
@@ -95,19 +95,6 @@ kubeconfig (including the current context). `~/.ssh` is mounted for
   Export it or start the desktop keyring session first.
 - Prefer the agent over copying private keys into the image.
 
-An optional host root CA is installed on start when present, so `kubectl` and
-`curl` can trust clusters signed by it (for example `*.home.arpa`).
-`initializeCommand` copies the first existing file into
-`~/.config/rockchip-dra-devcontainer/ca.home.arpa-root_ca.pem`:
-
-1. `/etc/pki/ca-trust/source/anchors/ca.home.arpa-root_ca.pem` (Fedora/Aurora)
-2. `/usr/local/share/ca-certificates/ca.home.arpa-root_ca.crt`
-3. `~/.local/share/homelab/ca.home.arpa-root_ca.pem` (portable fallback)
-
-Then `postStartCommand` runs `update-ca-trust` if that file is non-empty.
-After adding or updating the host CA, recreate or at least restart the
-container (`devcontainer up` again). Public cluster APIs do not need this.
-
 ## Kind and image builds
 
 The host container engine socket is **not** mounted. Docker and Podman socket
@@ -147,5 +134,5 @@ Rebuild the container after a pin bump.
   README.md
   scripts/
     post-create.sh   # tool smoke checks
-    post-start.sh    # SSH/kube warnings + optional CA trust
+    post-start.sh    # SSH and kubeconfig warnings
 ```
