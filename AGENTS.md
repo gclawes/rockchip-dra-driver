@@ -42,8 +42,9 @@ docs/upstream.md                      notes on upstream tracking
 
 ## Development tools
 
-`go`, `gofmt`, `golangci-lint`, `kubectl`, `helm`, and `kind` come from the
-devcontainer. Do not install them on the host to complete a task.
+`go`, `gofmt`, `golangci-lint`, `kubectl`, and `helm` come from the
+devcontainer. Do not install them on the host to complete a task. `kind` is
+not in the image; e2e stays on CI or a host engine.
 
 ### Devcontainer
 
@@ -59,12 +60,13 @@ devcontainer. Do not install them on the host to complete a task.
 When a required tool is missing on the host, run it **inside the
 devcontainer**, not by installing it on the host. Prefer the container even
 when a host binary exists if the task needs the image's Go toolchain
-(`GOTOOLCHAIN=local`, aligned with `common.mk`) or the mounted cluster
-credentials.
+(`GOTOOLCHAIN=local`, version taken from `go.mod` at image build) or the
+mounted cluster credentials.
 
 Check the image's tool list in [`.devcontainer/README.md`](.devcontainer/README.md)
-(table under **What you get**) and pins in [`.devcontainer/Dockerfile`](.devcontainer/Dockerfile);
-do not assume a host install or invent extra packages.
+(table under **What you get**). Do not assume a host install, a pinned CLI
+version, or invent extra packages. Rebuild the image after the `go` line in
+`go.mod` changes.
 
 From the repo root:
 
