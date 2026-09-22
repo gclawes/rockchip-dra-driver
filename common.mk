@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Keep in sync with .devcontainer/Dockerfile GO_VERSION.
 GO_VERSION ?= 1.26.2
 
 DRIVER_NAME := rockchip-dra-driver
