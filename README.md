@@ -43,9 +43,22 @@ Helm knobs:
 | `gpu.enabled` | `true` | Publish GPU devices |
 | `gpu.maxAllocations` | `0` (default 8) | Concurrent GPU claim cap |
 | `mockDevices` | `false` | Fake RK3588 devices for kind |
+| `discoveryInterval` | `10s` | How often to re-read sysfs. Keep this under 30s |
 
 DeviceClasses: `npu.rockchip.com`, `gpu.rockchip.com`. Driver name:
 `dra.rockchip.com`.
+
+The plugin reports device health to the kubelet and republishes the
+ResourceSlice when sysfs changes. A char device that has not appeared yet
+(udev) is `Unknown` and is not tainted. Once a device has been seen, losing
+its kernel driver or char device marks it `Unhealthy` and taints it
+`dra.rockchip.com/unhealthy` with effect `NoExecute` (this also blocks new
+scheduling). The taint value is `node-missing` or `not-discovered`. New
+prepares fail until the device is usable again. The device stays published
+while a claim is still prepared, and is removed once that claim is
+unprepared. Device taints and health status need Kubernetes 1.36+
+(`DRADeviceTaints` and the DRA resource-health service); rediscovery and
+failed prepares still apply on 1.35.
 
 Deployable `Deployment` examples (NPU, GPU, both, and shared NPU replicas)
 are in [`examples/`](examples/).

@@ -29,6 +29,20 @@ const (
 	// DefaultGPUMaxAllocations is used when Helm does not override the GPU
 	// share cap and discovery cannot infer a better value.
 	DefaultGPUMaxAllocations = 8
+
+	// TaintUnhealthy is applied with effect NoExecute when an advertised
+	// device loses its kernel driver or char device. NoExecute also blocks
+	// new scheduling. The value is TaintValueNodeMissing or
+	// TaintValueNotDiscovered.
+	TaintUnhealthy = "dra.rockchip.com/unhealthy"
+
+	// TaintValueNodeMissing means the char device disappeared after it had
+	// been present.
+	TaintValueNodeMissing = "node-missing"
+
+	// TaintValueNotDiscovered means enumeration no longer finds the device
+	// (driver unbound or render node gone) while a claim is still prepared.
+	TaintValueNotDiscovered = "not-discovered"
 )
 
 // ResourceSlice attribute names. In CEL these are addressed as
