@@ -25,6 +25,10 @@ gpu:
 # Enable for kind e2e; leave false on hardware.
 mockDevices: false
 
+# How often the plugin re-reads sysfs. Keep this under the kubelet
+# device-health lease (30s) so a missing accelerator is tainted promptly.
+discoveryInterval: 10s
+
 imagePullSecrets: []
 image:
   repository: ghcr.io/gclawes/rockchip-dra-driver

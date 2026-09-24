@@ -59,6 +59,8 @@ type Flags struct {
 	npuMaxAllocations             int
 	gpuMaxAllocations             int
 	sysfsRoot                     string
+	devRoot                       string
+	discoveryInterval             time.Duration
 }
 
 type Config struct {
@@ -179,6 +181,13 @@ func newApp() *cli.App {
 			Destination: &f.sysfsRoot,
 			EnvVars:     []string{"SYSFS_ROOT"},
 		},
+		&cli.DurationFlag{
+			Name:        "discovery-interval",
+			Usage:       "How often to re-read sysfs and republish devices. Keep this under 30s so reported device health stays current.",
+			Value:       defaultDiscoveryInterval,
+			Destination: &f.discoveryInterval,
+			EnvVars:     []string{"DISCOVERY_INTERVAL"},
+		},
 	}
 	cliFlags = append(cliFlags, f.kubeClientConfig.Flags()...)
 	cliFlags = append(cliFlags, f.loggingConfig.Flags()...)
@@ -265,6 +274,7 @@ func RunPlugin(ctx context.Context, config *Config) error {
 func (c *Config) discoveryConfig() discovery.Config {
 	return discovery.Config{
 		SysfsRoot:         c.flags.sysfsRoot,
+		DevRoot:           c.flags.devRoot,
 		Mock:              c.flags.mockDevices,
 		NPUEnabled:        c.flags.npuEnabled,
 		GPUEnabled:        c.flags.gpuEnabled,
