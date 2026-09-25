@@ -19,10 +19,43 @@ package discovery
 import (
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 
 	"github.com/gclawes/rockchip-dra-driver/pkg/consts"
 )
+
+func TestMockEnumerateOmitsGID(t *testing.T) {
+	devs, err := Enumerate(Config{Mock: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range devs {
+		if d.DeviceGIDKnown {
+			t.Fatalf("mock device should not invent a gid: %+v", d)
+		}
+	}
+}
+
+func TestNodeGID(t *testing.T) {
+	if _, ok := nodeGID(filepath.Join(t.TempDir(), "missing")); ok {
+		t.Fatal("missing path should not have a gid")
+	}
+	path := filepath.Join(t.TempDir(), "node")
+	writeFile(t, path, "")
+	gid, ok := nodeGID(path)
+	if !ok {
+		t.Fatal("expected gid")
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || gid != int64(stat.Gid) {
+		t.Fatalf("gid %d != stat", gid)
+	}
+}
 
 func TestMockEnumerateRK3588(t *testing.T) {
 	devs, err := Enumerate(Config{Mock: true})
@@ -91,6 +124,12 @@ func TestSysfsEnumerate(t *testing.T) {
 	if devs[0].DeviceNode != filepath.Join(devRoot, "accel/accel0") {
 		t.Fatalf("unexpected NPU node: %+v", devs[0])
 	}
+	if !devs[0].DeviceGIDKnown || !devs[1].DeviceGIDKnown {
+		t.Fatalf("expected gids from fixture nodes, got %+v", devs)
+	}
+	if devs[0].DeviceGID != fileGID(t, devs[0].DeviceNode) || devs[1].DeviceGID != fileGID(t, devs[1].DeviceNode) {
+		t.Fatalf("gid mismatch: %+v", devs)
+	}
 	if devs[1].KMD != consts.KMDPanthor || devs[1].Model != "Mali-G610" {
 		t.Fatalf("unexpected GPU: %+v", devs[1])
 	}
@@ -136,6 +175,15 @@ func TestMissingKMDOmitsDevice(t *testing.T) {
 	if len(devs) != 0 {
 		t.Fatalf("expected no devices, got %+v", devs)
 	}
+}
+
+func fileGID(t *testing.T, path string) int64 {
+	t.Helper()
+	gid, ok := nodeGID(path)
+	if !ok {
+		t.Fatalf("stat %s", path)
+	}
+	return gid
 }
 
 func writeFile(t *testing.T, path, contents string) {

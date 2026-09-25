@@ -60,6 +60,21 @@ unprepared. Device taints and health status need Kubernetes 1.36+
 (`DRADeviceTaints` and the DRA resource-health service); rediscovery and
 failed prepares still apply on 1.35.
 
+Char devices are injected with the host mode and owner. On a typical board
+the NPU and GPU nodes are mode `0660` and group `render`. The gid is not
+stable across distros, so this driver does not chmod the node and does not
+guess a supplemental group. When the node exists, the ResourceSlice attribute
+`deviceGid` and the CDI variable `DRA_ROCKCHIP_<TYPE>_GID` carry the host gid.
+Set that value on the pod:
+
+```yaml
+securityContext:
+  supplementalGroups: [<deviceGid>]
+```
+
+A pod that claims both an NPU and a GPU needs every distinct gid. Mock
+discovery omits `deviceGid` because there is no host node.
+
 Deployable `Deployment` examples (NPU, GPU, both, and shared NPU replicas)
 are in [`examples/`](examples/).
 

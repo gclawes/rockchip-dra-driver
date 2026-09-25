@@ -112,6 +112,9 @@ func deviceEdits(d discovery.Device, mock bool) cdispec.ContainerEdits {
 			fmt.Sprintf("%s_DEVICE=%s", prefix, d.DeviceNode),
 		},
 	}
+	if d.DeviceGIDKnown {
+		edits.Env = append(edits.Env, fmt.Sprintf("%s_GID=%d", prefix, d.DeviceGID))
+	}
 	if !mock && d.DeviceNode != "" {
 		if _, err := os.Stat(d.DeviceNode); err == nil {
 			edits.DeviceNodes = []*cdispec.DeviceNode{{

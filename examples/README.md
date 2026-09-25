@@ -21,6 +21,13 @@ Each example is a `Deployment` plus a `ResourceClaimTemplate`. Kubernetes
 creates one `ResourceClaim` per replica. The default request consumes one
 `shares` unit (Helm defaults: 3 concurrent NPU claims, 8 GPU).
 
+The containers run as root in these examples, so they can open a `0660`
+`root:render` node. A non-root container must set `supplementalGroups` to the
+host gid of each claimed device. Read it from the ResourceSlice attribute
+`deviceGid`, or from `DRA_ROCKCHIP_NPU_GID` / `DRA_ROCKCHIP_GPU_GID` in a root
+debug pod. Do not hardcode the gid: `render` and `video` differ by distro. A
+pod that claims both devices needs every distinct gid.
+
 Check a running pod:
 
 ```bash
