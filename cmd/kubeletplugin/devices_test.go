@@ -52,6 +52,9 @@ func TestDevicesToResources(t *testing.T) {
 	if !ok || cap.Value.CmpInt64(3) != 0 || cap.RequestPolicy == nil || cap.RequestPolicy.Default == nil {
 		t.Fatalf("unexpected npu capacity: %+v", cap)
 	}
+	assertShareRange(t, cap.RequestPolicy, 3)
+	gpu := deviceByName(t, pool.Slices[0].Devices, "gpu-0")
+	assertShareRange(t, gpu.Capacity[consts.CapacityShares].RequestPolicy, 8)
 	if _, ok := npu.Attributes[consts.AttrDeviceGID]; ok {
 		t.Fatalf("mock device should not publish a gid: %+v", npu.Attributes)
 	}
@@ -96,6 +99,30 @@ func TestUnhealthyDeviceIsTainted(t *testing.T) {
 	}
 	if taint.TimeAdded == nil || !taint.TimeAdded.Time.Equal(when) {
 		t.Fatalf("unexpected taint time: %+v", taint.TimeAdded)
+	}
+}
+
+func TestShareRequestPolicySingleShareOmitsStep(t *testing.T) {
+	policy := shareRequestPolicy(1)
+	assertShareRange(t, policy, 1)
+	if policy.ValidRange.Step != nil {
+		t.Fatalf("step must be omitted when capacity is 1: %+v", policy.ValidRange.Step)
+	}
+}
+
+func assertShareRange(t *testing.T, policy *resourceapi.CapacityRequestPolicy, max int64) {
+	t.Helper()
+	if policy == nil || policy.Default == nil || policy.Default.CmpInt64(1) != 0 {
+		t.Fatalf("unexpected default: %+v", policy)
+	}
+	rng := policy.ValidRange
+	if rng == nil || rng.Min == nil || rng.Max == nil || rng.Min.CmpInt64(1) != 0 || rng.Max.CmpInt64(max) != 0 {
+		t.Fatalf("unexpected range for max %d: %+v", max, rng)
+	}
+	if max >= 2 {
+		if rng.Step == nil || rng.Step.CmpInt64(1) != 0 {
+			t.Fatalf("expected step 1: %+v", rng.Step)
+		}
 	}
 }
 

@@ -75,8 +75,12 @@ securityContext:
 A pod that claims both an NPU and a GPU needs every distinct gid. Mock
 discovery omits `deviceGid` because there is no host node.
 
-Deployable `Deployment` examples (NPU, GPU, both, and shared NPU replicas)
-are in [`examples/`](examples/).
+A claim that omits `shares` gets 1. Requests must fall in `1..capacity`
+(step 1 when capacity is at least 2). Asking for the whole published count
+is how to take the device exclusively. There is no core-mask UAPI.
+
+Deployable `Deployment` examples (NPU, GPU, both, shared NPU replicas, and
+an exclusive NPU claim) are in [`examples/`](examples/).
 
 ## Development
 
