@@ -36,7 +36,7 @@ func discoverNPU(cfg Config, soc string) []Device {
 		maxAlloc = defaultNPUMaxAllocations(soc, cores)
 	}
 
-	return []Device{{
+	dev := Device{
 		Name:           "npu-0",
 		Type:           consts.TypeNPU,
 		SoC:            soc,
@@ -46,7 +46,9 @@ func discoverNPU(cfg Config, soc string) []Device {
 		CoreCount:      cores,
 		DeviceNode:     devNode,
 		MaxAllocations: maxAlloc,
-	}}
+	}
+	applyNodeGID(&dev)
+	return []Device{dev}
 }
 
 // rocketAccelNode returns the DRM accel char device for rocket.

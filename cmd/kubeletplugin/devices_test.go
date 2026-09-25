@@ -52,9 +52,30 @@ func TestDevicesToResources(t *testing.T) {
 	if !ok || cap.Value.CmpInt64(3) != 0 || cap.RequestPolicy == nil || cap.RequestPolicy.Default == nil {
 		t.Fatalf("unexpected npu capacity: %+v", cap)
 	}
+	if _, ok := npu.Attributes[consts.AttrDeviceGID]; ok {
+		t.Fatalf("mock device should not publish a gid: %+v", npu.Attributes)
+	}
 	// Name order, not discovery order.
 	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" {
 		t.Fatalf("devices not sorted: %+v", pool.Slices[0].Devices)
+	}
+}
+
+func TestDeviceGIDAttribute(t *testing.T) {
+	dev := toResourceDevice(trackedDevice{
+		Device: discovery.Device{
+			Name:           "npu-0",
+			Type:           consts.TypeNPU,
+			DeviceNode:     "/dev/accel/accel0",
+			MaxAllocations: 3,
+			DeviceGID:      992,
+			DeviceGIDKnown: true,
+		},
+		status: kubeletplugin.HealthStatusHealthy,
+	})
+	got := dev.Attributes[consts.AttrDeviceGID]
+	if got.IntValue == nil || *got.IntValue != 992 {
+		t.Fatalf("unexpected deviceGid: %+v", got)
 	}
 }
 
