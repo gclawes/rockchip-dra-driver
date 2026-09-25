@@ -15,11 +15,14 @@ kubectl apply -f examples/npu-deployment.yaml
 kubectl apply -f examples/gpu-deployment.yaml
 kubectl apply -f examples/npu-and-gpu-deployment.yaml
 kubectl apply -f examples/npu-shared-replicas.yaml
+kubectl apply -f examples/npu-exclusive.yaml
 ```
 
 Each example is a `Deployment` plus a `ResourceClaimTemplate`. Kubernetes
-creates one `ResourceClaim` per replica. The default request consumes one
-`shares` unit (Helm defaults: 3 concurrent NPU claims, 8 GPU).
+creates one `ResourceClaim` per replica. A request that omits `shares`
+consumes one unit. Requests must be in `1..capacity` (Helm defaults: NPU
+capacity 3 on RK3588, GPU capacity 8). `npu-exclusive.yaml` requests all 3
+RK3588 NPU shares. Change that quantity if the published capacity differs.
 
 Check a running pod:
 

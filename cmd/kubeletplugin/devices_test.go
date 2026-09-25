@@ -19,6 +19,8 @@ package main
 import (
 	"testing"
 
+	resourceapi "k8s.io/api/resource/v1"
+
 	"github.com/gclawes/rockchip-dra-driver/internal/discovery"
 	"github.com/gclawes/rockchip-dra-driver/pkg/consts"
 )
@@ -40,5 +42,33 @@ func TestDevicesToResources(t *testing.T) {
 	cap, ok := npu.Capacity[consts.CapacityShares]
 	if !ok || cap.Value.CmpInt64(3) != 0 || cap.RequestPolicy == nil || cap.RequestPolicy.Default == nil {
 		t.Fatalf("unexpected npu capacity: %+v", cap)
+	}
+	assertShareRange(t, cap.RequestPolicy, 3)
+	gpu := pool.Slices[0].Devices[1]
+	gpuCap := gpu.Capacity[consts.CapacityShares]
+	assertShareRange(t, gpuCap.RequestPolicy, 8)
+}
+
+func TestShareRequestPolicySingleShareOmitsStep(t *testing.T) {
+	policy := shareRequestPolicy(1)
+	assertShareRange(t, policy, 1)
+	if policy.ValidRange.Step != nil {
+		t.Fatalf("step must be omitted when capacity is 1: %+v", policy.ValidRange.Step)
+	}
+}
+
+func assertShareRange(t *testing.T, policy *resourceapi.CapacityRequestPolicy, max int64) {
+	t.Helper()
+	if policy == nil || policy.Default == nil || policy.Default.CmpInt64(1) != 0 {
+		t.Fatalf("unexpected default: %+v", policy)
+	}
+	rng := policy.ValidRange
+	if rng == nil || rng.Min == nil || rng.Max == nil || rng.Min.CmpInt64(1) != 0 || rng.Max.CmpInt64(max) != 0 {
+		t.Fatalf("unexpected range for max %d: %+v", max, rng)
+	}
+	if max >= 2 {
+		if rng.Step == nil || rng.Step.CmpInt64(1) != 0 {
+			t.Fatalf("expected step 1: %+v", rng.Step)
+		}
 	}
 }
