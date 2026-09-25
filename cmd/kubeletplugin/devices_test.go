@@ -41,4 +41,22 @@ func TestDevicesToResources(t *testing.T) {
 	if !ok || cap.Value.CmpInt64(3) != 0 || cap.RequestPolicy == nil || cap.RequestPolicy.Default == nil {
 		t.Fatalf("unexpected npu capacity: %+v", cap)
 	}
+	if _, ok := npu.Attributes[consts.AttrDeviceGID]; ok {
+		t.Fatalf("mock device should not publish a gid: %+v", npu.Attributes)
+	}
+}
+
+func TestDeviceGIDAttribute(t *testing.T) {
+	dev := toResourceDevice(discovery.Device{
+		Name:           "npu-0",
+		Type:           consts.TypeNPU,
+		DeviceNode:     "/dev/accel/accel0",
+		MaxAllocations: 3,
+		DeviceGID:      992,
+		DeviceGIDKnown: true,
+	})
+	got := dev.Attributes[consts.AttrDeviceGID]
+	if got.IntValue == nil || *got.IntValue != 992 {
+		t.Fatalf("unexpected deviceGid: %+v", got)
+	}
 }

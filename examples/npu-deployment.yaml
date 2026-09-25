@@ -42,6 +42,8 @@ spec:
       resourceClaims:
       - name: npu
         resourceClaimTemplateName: npu-example
+      # Non-root pods must set supplementalGroups to the host deviceGid.
+      # See examples/README.md. These examples run as root.
       containers:
       - name: app
         image: debian:bookworm-slim

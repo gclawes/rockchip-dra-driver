@@ -63,7 +63,7 @@ func discoverGPU(cfg Config, soc string) []Device {
 
 	model, shaderCores := gpuModelForSoC(soc)
 
-	return []Device{{
+	dev := Device{
 		Name:           "gpu-0",
 		Type:           consts.TypeGPU,
 		SoC:            soc,
@@ -73,7 +73,9 @@ func discoverGPU(cfg Config, soc string) []Device {
 		ShaderCores:    shaderCores,
 		DeviceNode:     renderNode,
 		MaxAllocations: maxAlloc,
-	}}
+	}
+	applyNodeGID(&dev)
+	return []Device{dev}
 }
 
 func gpuModelForSoC(soc string) (string, int64) {

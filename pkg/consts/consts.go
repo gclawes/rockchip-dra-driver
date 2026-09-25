@@ -42,6 +42,7 @@ const (
 	AttrCoreCount   = "coreCount"
 	AttrShaderCores = "shaderCores"
 	AttrDeviceNode  = "deviceNode"
+	AttrDeviceGID   = "deviceGid"
 )
 
 const (

@@ -48,6 +48,9 @@ func toResourceDevice(d discovery.Device) resourceapi.Device {
 		consts.AttrKMD:        {StringValue: ptr.To(d.KMD)},
 		consts.AttrDeviceNode: {StringValue: ptr.To(d.DeviceNode)},
 	}
+	if d.DeviceGIDKnown {
+		attrs[consts.AttrDeviceGID] = resourceapi.DeviceAttribute{IntValue: ptr.To(d.DeviceGID)}
+	}
 	if d.SoC != "" {
 		attrs[consts.AttrSoC] = resourceapi.DeviceAttribute{StringValue: ptr.To(d.SoC)}
 	}

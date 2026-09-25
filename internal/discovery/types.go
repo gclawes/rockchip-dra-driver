@@ -47,6 +47,11 @@ type Device struct {
 	ShaderCores    int64
 	DeviceNode     string
 	MaxAllocations int64
+	// DeviceGID is the host group id of DeviceNode. It is set only when
+	// DeviceGIDKnown is true. Zero is a valid gid (root), so it cannot be
+	// used as the unknown sentinel.
+	DeviceGID      int64
+	DeviceGIDKnown bool
 }
 
 func defaultConfig(c Config) Config {

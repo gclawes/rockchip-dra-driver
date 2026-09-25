@@ -55,3 +55,29 @@ func TestDeviceEditsEnvScopedByType(t *testing.T) {
 		t.Fatalf("gpu env: got %v want %v", gpu.Env, wantGPU)
 	}
 }
+
+func TestDeviceEditsIncludesGID(t *testing.T) {
+	npu := deviceEdits(discovery.Device{
+		Type:           consts.TypeNPU,
+		SoC:            "rk3588",
+		KMD:            consts.KMDRocket,
+		DeviceNode:     "/dev/accel/accel0",
+		DeviceGID:      44,
+		DeviceGIDKnown: true,
+	}, true)
+	want := "DRA_ROCKCHIP_NPU_GID=44"
+	if !slices.Contains(npu.Env, want) {
+		t.Fatalf("missing %s in %v", want, npu.Env)
+	}
+
+	rootOwned := deviceEdits(discovery.Device{
+		Type:           consts.TypeNPU,
+		KMD:            consts.KMDRocket,
+		DeviceNode:     "/dev/accel/accel0",
+		DeviceGID:      0,
+		DeviceGIDKnown: true,
+	}, true)
+	if !slices.Contains(rootOwned.Env, "DRA_ROCKCHIP_NPU_GID=0") {
+		t.Fatalf("gid 0 should still be published: %v", rootOwned.Env)
+	}
+}
