@@ -17,18 +17,26 @@
 package main
 
 import (
+	"slices"
+	"strings"
+
 	resourceapi "k8s.io/api/resource/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/dynamic-resource-allocation/kubeletplugin"
 	"k8s.io/dynamic-resource-allocation/resourceslice"
 	"k8s.io/utils/ptr"
 
-	"github.com/gclawes/rockchip-dra-driver/internal/discovery"
 	"github.com/gclawes/rockchip-dra-driver/pkg/consts"
 )
 
-func devicesToResources(nodeName string, devices []discovery.Device) resourceslice.DriverResources {
+func devicesToResources(nodeName string, devices []trackedDevice) resourceslice.DriverResources {
+	sorted := append([]trackedDevice(nil), devices...)
+	slices.SortFunc(sorted, func(a, b trackedDevice) int {
+		return strings.Compare(a.Name, b.Name)
+	})
 	var sliceDevices []resourceapi.Device
-	for _, d := range devices {
+	for _, d := range sorted {
 		sliceDevices = append(sliceDevices, toResourceDevice(d))
 	}
 	return resourceslice.DriverResources{
@@ -40,7 +48,8 @@ func devicesToResources(nodeName string, devices []discovery.Device) resourcesli
 	}
 }
 
-func toResourceDevice(d discovery.Device) resourceapi.Device {
+func toResourceDevice(td trackedDevice) resourceapi.Device {
+	d := td.Device
 	attrs := map[resourceapi.QualifiedName]resourceapi.DeviceAttribute{
 		consts.AttrType:       {StringValue: ptr.To(d.Type)},
 		consts.AttrVendor:     {StringValue: ptr.To(d.Vendor)},
@@ -63,7 +72,7 @@ func toResourceDevice(d discovery.Device) resourceapi.Device {
 
 	one := resource.MustParse("1")
 	shares := resource.NewQuantity(d.MaxAllocations, resource.DecimalSI)
-	return resourceapi.Device{
+	dev := resourceapi.Device{
 		Name:                     d.Name,
 		Attributes:               attrs,
 		AllowMultipleAllocations: ptr.To(true),
@@ -76,4 +85,16 @@ func toResourceDevice(d discovery.Device) resourceapi.Device {
 			},
 		},
 	}
+	if td.status == kubeletplugin.HealthStatusUnhealthy {
+		taint := resourceapi.DeviceTaint{
+			Key:    consts.TaintUnhealthy,
+			Value:  td.taintValue,
+			Effect: resourceapi.DeviceTaintEffectNoExecute,
+		}
+		if !td.taintedAt.IsZero() {
+			taint.TimeAdded = ptr.To(metav1.NewTime(td.taintedAt))
+		}
+		dev.Taints = []resourceapi.DeviceTaint{taint}
+	}
+	return dev
 }

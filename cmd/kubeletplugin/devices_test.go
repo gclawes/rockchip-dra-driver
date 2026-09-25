@@ -18,6 +18,10 @@ package main
 
 import (
 	"testing"
+	"time"
+
+	resourceapi "k8s.io/api/resource/v1"
+	"k8s.io/dynamic-resource-allocation/kubeletplugin"
 
 	"github.com/gclawes/rockchip-dra-driver/internal/discovery"
 	"github.com/gclawes/rockchip-dra-driver/pkg/consts"
@@ -28,14 +32,21 @@ func TestDevicesToResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res := devicesToResources("node-a", devs)
+	tracked := make([]trackedDevice, len(devs))
+	for i, d := range devs {
+		tracked[i] = trackedDevice{Device: d, status: kubeletplugin.HealthStatusHealthy}
+	}
+	res := devicesToResources("node-a", tracked)
 	pool, ok := res.Pools["node-a"]
 	if !ok || len(pool.Slices) != 1 || len(pool.Slices[0].Devices) != 2 {
 		t.Fatalf("unexpected pool: %+v", res.Pools)
 	}
-	npu := pool.Slices[0].Devices[0]
-	if npu.Name != "npu-0" || npu.AllowMultipleAllocations == nil || !*npu.AllowMultipleAllocations {
+	npu := deviceByName(t, pool.Slices[0].Devices, "npu-0")
+	if npu.AllowMultipleAllocations == nil || !*npu.AllowMultipleAllocations {
 		t.Fatalf("unexpected npu device: %+v", npu)
+	}
+	if len(npu.Taints) != 0 {
+		t.Fatalf("healthy device tainted: %+v", npu.Taints)
 	}
 	cap, ok := npu.Capacity[consts.CapacityShares]
 	if !ok || cap.Value.CmpInt64(3) != 0 || cap.RequestPolicy == nil || cap.RequestPolicy.Default == nil {
@@ -44,19 +55,57 @@ func TestDevicesToResources(t *testing.T) {
 	if _, ok := npu.Attributes[consts.AttrDeviceGID]; ok {
 		t.Fatalf("mock device should not publish a gid: %+v", npu.Attributes)
 	}
+	// Name order, not discovery order.
+	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" {
+		t.Fatalf("devices not sorted: %+v", pool.Slices[0].Devices)
+	}
 }
 
 func TestDeviceGIDAttribute(t *testing.T) {
-	dev := toResourceDevice(discovery.Device{
-		Name:           "npu-0",
-		Type:           consts.TypeNPU,
-		DeviceNode:     "/dev/accel/accel0",
-		MaxAllocations: 3,
-		DeviceGID:      992,
-		DeviceGIDKnown: true,
+	dev := toResourceDevice(trackedDevice{
+		Device: discovery.Device{
+			Name:           "npu-0",
+			Type:           consts.TypeNPU,
+			DeviceNode:     "/dev/accel/accel0",
+			MaxAllocations: 3,
+			DeviceGID:      992,
+			DeviceGIDKnown: true,
+		},
+		status: kubeletplugin.HealthStatusHealthy,
 	})
 	got := dev.Attributes[consts.AttrDeviceGID]
 	if got.IntValue == nil || *got.IntValue != 992 {
 		t.Fatalf("unexpected deviceGid: %+v", got)
 	}
+}
+
+func TestUnhealthyDeviceIsTainted(t *testing.T) {
+	when := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
+	dev := toResourceDevice(trackedDevice{
+		Device:     discovery.Device{Name: "npu-0", Type: consts.TypeNPU, MaxAllocations: 3},
+		status:     kubeletplugin.HealthStatusUnhealthy,
+		taintValue: consts.TaintValueNodeMissing,
+		taintedAt:  when,
+	})
+	if len(dev.Taints) != 1 {
+		t.Fatalf("expected one taint, got %+v", dev.Taints)
+	}
+	taint := dev.Taints[0]
+	if taint.Key != consts.TaintUnhealthy || taint.Value != consts.TaintValueNodeMissing || taint.Effect != resourceapi.DeviceTaintEffectNoExecute {
+		t.Fatalf("unexpected taint: %+v", taint)
+	}
+	if taint.TimeAdded == nil || !taint.TimeAdded.Time.Equal(when) {
+		t.Fatalf("unexpected taint time: %+v", taint.TimeAdded)
+	}
+}
+
+func deviceByName(t *testing.T, devs []resourceapi.Device, name string) resourceapi.Device {
+	t.Helper()
+	for _, d := range devs {
+		if d.Name == name {
+			return d
+		}
+	}
+	t.Fatalf("device %s not found in %+v", name, devs)
+	return resourceapi.Device{}
 }

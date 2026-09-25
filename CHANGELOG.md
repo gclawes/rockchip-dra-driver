@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.3.0...0.4.0) (2026-09-25)
+
+
+### Features
+
+* **discovery:** report health and rediscover devices ([fb9815e](https://github.com/gclawes/rockchip-dra-driver/commit/fb9815e6a25fefd05b5625ea2b47f1c6ac8d9702))
+
 # [0.3.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.2.0...0.3.0) (2026-09-13)
 
 
