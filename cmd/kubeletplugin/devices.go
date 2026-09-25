@@ -70,7 +70,6 @@ func toResourceDevice(td trackedDevice) resourceapi.Device {
 		attrs[consts.AttrShaderCores] = resourceapi.DeviceAttribute{IntValue: ptr.To(d.ShaderCores)}
 	}
 
-	one := resource.MustParse("1")
 	shares := resource.NewQuantity(d.MaxAllocations, resource.DecimalSI)
 	dev := resourceapi.Device{
 		Name:                     d.Name,
@@ -78,10 +77,8 @@ func toResourceDevice(td trackedDevice) resourceapi.Device {
 		AllowMultipleAllocations: ptr.To(true),
 		Capacity: map[resourceapi.QualifiedName]resourceapi.DeviceCapacity{
 			consts.CapacityShares: {
-				Value: *shares,
-				RequestPolicy: &resourceapi.CapacityRequestPolicy{
-					Default: &one,
-				},
+				Value:         *shares,
+				RequestPolicy: shareRequestPolicy(d.MaxAllocations),
 			},
 		},
 	}
@@ -97,4 +94,27 @@ func toResourceDevice(td trackedDevice) resourceapi.Device {
 		dev.Taints = []resourceapi.DeviceTaint{taint}
 	}
 	return dev
+}
+
+// shareRequestPolicy caps a claim at 1..maxAlloc shares. There is no core-mask
+// UAPI, so exclusive use is requesting the whole published count. Step is
+// omitted when maxAlloc is 1: Min+Step must not exceed the device capacity.
+func shareRequestPolicy(maxAlloc int64) *resourceapi.CapacityRequestPolicy {
+	one := resource.MustParse("1")
+	policy := &resourceapi.CapacityRequestPolicy{Default: &one}
+	if maxAlloc < 1 {
+		return policy
+	}
+	min := resource.MustParse("1")
+	max := resource.NewQuantity(maxAlloc, resource.DecimalSI)
+	rng := &resourceapi.CapacityRequestPolicyRange{
+		Min: &min,
+		Max: max,
+	}
+	if maxAlloc >= 2 {
+		step := resource.MustParse("1")
+		rng.Step = &step
+	}
+	policy.ValidRange = rng
+	return policy
 }
