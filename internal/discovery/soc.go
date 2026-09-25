@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // knownSoCs is ordered most-specific first so rk3588s wins over a generic
@@ -70,4 +71,31 @@ func ueventValue(path, key string) string {
 func exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// nodeGID returns the group id of a char device. False when the node is
+// missing or the stat result has no Unix gid. Callers must not treat a zero
+// gid as "unknown": root-owned nodes are gid 0.
+func nodeGID(path string) (int64, bool) {
+	if path == "" {
+		return 0, false
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, false
+	}
+	stat, ok := info.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, false
+	}
+	return int64(stat.Gid), true
+}
+
+func applyNodeGID(d *Device) {
+	gid, ok := nodeGID(d.DeviceNode)
+	if !ok {
+		return
+	}
+	d.DeviceGID = gid
+	d.DeviceGIDKnown = true
 }
