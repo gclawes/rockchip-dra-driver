@@ -64,6 +64,7 @@ jobs:
         env:
           GIT_TAG: ${{ steps.tag.outputs.name }}
           CONTAINER_TOOL: docker
+          # linux/arm* only. Comma-separate to publish more than one ARM platform.
           PLATFORMS: linux/arm64
           DRIVER_IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
           DRIVER_CHART_REGISTRY: ghcr.io/${{ github.repository }}/charts
