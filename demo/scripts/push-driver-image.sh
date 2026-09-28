@@ -26,6 +26,7 @@ export REGISTRY="${DRIVER_IMAGE_REGISTRY}"
 export IMAGE="${DRIVER_IMAGE_NAME}"
 export VERSION="${DRIVER_IMAGE_TAG}"
 export CONTAINER_TOOL="${CONTAINER_TOOL}"
+# linux/arm* only. Comma-separate to publish more than one ARM platform.
 export PLATFORMS="${PLATFORMS:-linux/arm64}"
 
 make -f deployments/container/Makefile push

@@ -28,29 +28,17 @@ IMAGE_TAG := $(VERSION)
 IMAGE = $(IMAGE_NAME):$(IMAGE_TAG)
 BASE_IMAGE ?= gcr.io/distroless/static-debian13
 
-UNAME_M ?= $(shell uname -m)
-ifeq ($(UNAME_M),x86_64)
-	HOST_PLATFORM := linux/amd64
-else ifeq ($(UNAME_M),arm64)
-	HOST_PLATFORM := linux/arm64
-else ifeq ($(UNAME_M),aarch64)
-	HOST_PLATFORM := linux/arm64
-else
-	$(error Unsupported local platform: $(UNAME_M))
-endif
-
-ifeq ($(origin PLATFORMS), undefined)
-  PLATFORMS := $(HOST_PLATFORM)
-else ifeq ($(strip $(PLATFORMS)),)
-  $(error PLATFORMS is set but empty. Unset it to use the host platform, or provide one or more values)
-endif
+# Rockchip nodes are arm64. A comma-separated list publishes an index of ARM
+# platforms (for example linux/arm64,linux/arm/v7). amd64 is not a target.
+PLATFORMS ?= linux/arm64
 
 BUILDX_BUILDER ?= rockchip-dra-driver-builder
-BUILDX_PROVENANCE ?= false
-BUILDX_SBOM ?= false
-BUILDX_METADATA_FLAGS = \
-	--provenance=$(BUILDX_PROVENANCE) \
-	--sbom=$(BUILDX_SBOM)
+# mode=min is the useful attestation without embedding full build args.
+# Attestations are attached on push only. buildx uploads those blobs;
+# a later "docker push" does not, and GHCR rejects the manifest with
+# "unknown blob".
+BUILDX_PROVENANCE ?= mode=min
+BUILDX_SBOM ?= true
 
 IMAGE_BUILD_ARGS = \
 	--build-arg GO_VERSION="$(GO_VERSION)" \
@@ -67,52 +55,53 @@ IMAGE_BUILD_FLAGS = \
 BUILDX_BUILD_FLAGS = \
 	$(IMAGE_BUILD_FLAGS) \
 	--builder $(BUILDX_BUILDER) \
-	$(BUILDX_METADATA_FLAGS) \
 	--platform $(PLATFORMS)
 
-.PHONY: build push ensure-buildx-builder
+# Passed only to registry pushes. --load cannot store attestations.
+BUILDX_ATTEST_FLAGS = \
+	--provenance=$(BUILDX_PROVENANCE) \
+	--sbom=$(BUILDX_SBOM)
 
-build:
-ifneq ($(findstring $(COMMA),$(PLATFORMS)),)
-	@echo "Building image for multiple platforms with buildx: $(PLATFORMS)"
-	@if [ "$(CONTAINER_TOOL)" != "docker" ]; then \
-		echo "Multi-platform build requires CONTAINER_TOOL=docker, got $(CONTAINER_TOOL)"; \
+.PHONY: build push check-platforms ensure-buildx-builder
+
+check-platforms:
+	@if [ -z "$(PLATFORMS)" ]; then echo "PLATFORMS is empty"; exit 1; fi
+	@for p in $(subst $(COMMA), ,$(PLATFORMS)); do \
+		case "$$p" in \
+			linux/arm*) ;; \
+			*) echo "unsupported platform $$p: only linux/arm* is published"; exit 1 ;; \
+		esac; \
+	done
+
+# Load a single platform into the local engine. Provenance is omitted because
+# the Docker image store cannot keep attestations.
+build: check-platforms
+	@if echo "$(PLATFORMS)" | grep -q ','; then \
+		echo "local build supports one platform; push to publish $(PLATFORMS)"; \
 		exit 1; \
 	fi
+ifeq ($(CONTAINER_TOOL),docker)
 	$(MAKE) -f $(SELF_MAKEFILE) ensure-buildx-builder
-	$(CONTAINER_TOOL) buildx build $(BUILDX_BUILD_FLAGS)
-else ifeq ($(PLATFORMS),$(HOST_PLATFORM))
-	@echo "Building image for single platform: $(PLATFORMS)"
-	$(if $(filter docker,$(CONTAINER_TOOL)),DOCKER_BUILDKIT=1 ,)$(CONTAINER_TOOL) build --platform $(PLATFORMS) $(IMAGE_BUILD_FLAGS)
+	$(CONTAINER_TOOL) buildx build $(BUILDX_BUILD_FLAGS) --load --provenance=false
 else
-	@echo "Building image for single platform: $(PLATFORMS) (host is $(HOST_PLATFORM))"
-	@if [ "$(CONTAINER_TOOL)" != "docker" ]; then \
-		echo "Cross-platform single-arch build requires CONTAINER_TOOL=docker, got $(CONTAINER_TOOL)"; \
-		exit 1; \
-	fi
-	$(MAKE) -f $(SELF_MAKEFILE) ensure-buildx-builder
-	$(CONTAINER_TOOL) buildx build $(BUILDX_BUILD_FLAGS) --load
+	$(CONTAINER_TOOL) build --platform $(PLATFORMS) $(IMAGE_BUILD_FLAGS)
 endif
 
-push:
-ifneq ($(findstring $(COMMA),$(PLATFORMS)),)
+# Always push with buildx so provenance and SBOM blobs are uploaded with the
+# manifest. A comma-separated PLATFORMS value publishes an ARM image index.
+push: check-platforms
 	@if [ "$(CONTAINER_TOOL)" != "docker" ]; then \
-		echo "Multi-platform push requires CONTAINER_TOOL=docker, got $(CONTAINER_TOOL)"; \
+		echo "image push requires docker buildx, got $(CONTAINER_TOOL)"; \
 		exit 1; \
 	fi
-	@echo "Pushing image for multiple platforms with buildx: $(PLATFORMS)"
+	@echo "Pushing $(PLATFORMS) with provenance=$(BUILDX_PROVENANCE) sbom=$(BUILDX_SBOM)"
 	$(MAKE) -f $(SELF_MAKEFILE) ensure-buildx-builder
-	$(CONTAINER_TOOL) buildx build $(BUILDX_BUILD_FLAGS) --push
-else
-	$(MAKE) -f $(SELF_MAKEFILE) build
-	$(CONTAINER_TOOL) push $(IMAGE)
-endif
+	$(CONTAINER_TOOL) buildx build $(BUILDX_BUILD_FLAGS) $(BUILDX_ATTEST_FLAGS) --push
 
 ensure-buildx-builder:
 ifeq ($(CONTAINER_TOOL),docker)
 	@docker buildx inspect $(BUILDX_BUILDER) >/dev/null 2>&1 || \
-		docker buildx create --name $(BUILDX_BUILDER) --driver docker-container --use
-	@docker buildx use $(BUILDX_BUILDER)
+		docker buildx create --name $(BUILDX_BUILDER) --driver docker-container
 	@docker buildx inspect --bootstrap $(BUILDX_BUILDER) >/dev/null
 else
 	@echo "ensure-buildx-builder requires CONTAINER_TOOL=docker"
