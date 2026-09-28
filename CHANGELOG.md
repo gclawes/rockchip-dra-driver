@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/gclawes/rockchip-dra-driver/compare/0.4.0...0.4.1) (2026-09-28)
+
+
+### Bug Fixes
+
+* push arm images with buildx attestations ([1c0ef22](https://github.com/gclawes/rockchip-dra-driver/commit/1c0ef22ab37b4c97531b58ff3bfff98433347edc))
+
 # [0.4.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.3.0...0.4.0) (2026-09-25)
 
 
