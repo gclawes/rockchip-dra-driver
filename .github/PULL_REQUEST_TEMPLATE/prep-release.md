@@ -12,9 +12,11 @@ Rebase-merge is acceptable only when the train is a straight line of conventiona
 
 The pre-release image for this pull request is tagged from `git describe` plus this pull request number. It is not the anticipated version. That tag exists only after this merges and semantic-release runs.
 
+<!-- included:start -->
 ## Included
 
 -
+<!-- included:end -->
 
 ## Not included
 

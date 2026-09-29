@@ -75,7 +75,9 @@ version you expect, not a channel semantic-release reads.
    complete. A draft cannot be merged.
 3. Target later feature and fix pulls at `prep/X.Y.Z`, not `master`.
    Squashing each of those into the train is fine. Each should already be
-   one conventional commit.
+   one conventional commit. When one merges, CI rewrites the Included
+   list on the draft release pull request. Do not edit that section by
+   hand. Notes under Not included stay manual.
 4. Retarget Dependabot pulls that belong in this version:
    `gh pr edit <n> --base prep/X.Y.Z`. Do not set `target-branch` in
    `dependabot.yml`. New Dependabot pulls keep opening against `master`.
