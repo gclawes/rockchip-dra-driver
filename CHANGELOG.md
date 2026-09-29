@@ -1,3 +1,15 @@
+# [0.6.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.5.0...0.6.0) (2026-09-29)
+
+
+### Bug Fixes
+
+* **deps:** bump the kubernetes group with 5 updates ([ffbee76](https://github.com/gclawes/rockchip-dra-driver/commit/ffbee76d961133c6e24afbf4a534ed52a7ce0243))
+
+
+### Features
+
+* constrain share requests ([54c3f56](https://github.com/gclawes/rockchip-dra-driver/commit/54c3f5695e775a92822d81abd33a925064ed9620))
+
 # [0.5.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.4.1...0.5.0) (2026-09-29)
 
 
