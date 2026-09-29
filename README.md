@@ -7,6 +7,7 @@ The first supported SoC is the **RK3588**, advertising:
 
 - **NPU** via the mainline [`accel/rocket`](https://docs.kernel.org/accel/rocket/index.html) driver (`/dev/accel/accel*`)
 - **GPU** via the mainline `panthor` DRM driver (Mali-G610 render node)
+- **VPU** via mainline `rkvdec` and `hantro-vpu` (`/dev/video*`), one device per block rather than per video index
 
 The driver is **mainline-only**. It does not support the proprietary Rockchip
 `rknpu` kernel module or RKNN-Toolkit2. CPU cores are out of scope; use
@@ -42,11 +43,17 @@ Helm knobs:
 | `npu.maxAllocations` | `0` (SoC default; RK3588 → 3) | Concurrent NPU claim cap |
 | `gpu.enabled` | `true` | Publish GPU devices |
 | `gpu.maxAllocations` | `0` (default 8) | Concurrent GPU claim cap |
+| `vpu.enabled` | `true` | Publish VPU devices |
+| `vpu.maxAllocations` | `0` (default 1 per block) | Concurrent claims of each VPU |
 | `mockDevices` | `false` | Fake RK3588 devices for kind |
 | `discoveryInterval` | `10s` | How often to re-read sysfs. Keep this under 30s |
 
-DeviceClasses: `npu.rockchip.com`, `gpu.rockchip.com`. Driver name:
-`dra.rockchip.com`.
+DeviceClasses: `npu.rockchip.com`, `gpu.rockchip.com`, and, when VPU
+discovery is enabled, `vpu-rkvdec.rockchip.com`,
+`vpu-hantro-dec.rockchip.com`, `vpu-hantro-enc.rockchip.com`,
+`vpu-hantro-av1.rockchip.com`. There is no generic `vpu.rockchip.com`.
+Hantro decode and AV1 decode share a driver, so classes select
+`type == vpu && block == …`. Driver name: `dra.rockchip.com`.
 
 The plugin reports device health to the kubelet and republishes the
 ResourceSlice when sysfs changes. A char device that has not appeared yet
@@ -61,10 +68,14 @@ unprepared. Device taints and health status need Kubernetes 1.36+
 failed prepares still apply on 1.35.
 
 Char devices are injected with the host mode and owner. On a typical board
-the NPU and GPU nodes are mode `0660` and group `render`. The gid is not
+the NPU and GPU nodes are mode `0660` and group `render`. VPU nodes are
+typically group `video`. The gid is not
 stable across distros, so this driver does not chmod the node and does not
 guess a supplemental group. When the node exists, the ResourceSlice attribute
-`deviceGid` and the CDI variable `DRA_ROCKCHIP_<TYPE>_GID` carry the host gid.
+`deviceGid` and a CDI variable carry the host gid. NPU and GPU use
+`DRA_ROCKCHIP_<TYPE>_GID`. VPU uses `DRA_ROCKCHIP_VPU_<BLOCK>_GID`
+(`DRA_ROCKCHIP_VPU_RKVDEC_GID`, `DRA_ROCKCHIP_VPU_HANTRO_DEC_GID`, …) so two
+blocks in one pod do not overwrite each other.
 Set that value on the pod:
 
 ```yaml
@@ -72,15 +83,15 @@ securityContext:
   supplementalGroups: [<deviceGid>]
 ```
 
-A pod that claims both an NPU and a GPU needs every distinct gid. Mock
+A pod that claims both an NPU and a VPU needs every distinct gid. Mock
 discovery omits `deviceGid` because there is no host node.
 
 A claim that omits `shares` gets 1. Requests must fall in `1..capacity`
 (step 1 when capacity is at least 2). Asking for the whole published count
 is how to take the device exclusively. There is no core-mask UAPI.
 
-Deployable `Deployment` examples (NPU, GPU, both, shared NPU replicas, and
-an exclusive NPU claim) are in [`examples/`](examples/).
+Deployable `Deployment` examples (NPU, GPU, both, shared NPU replicas, an
+exclusive NPU claim, and an rkvdec claim) are in [`examples/`](examples/).
 
 ## Development
 

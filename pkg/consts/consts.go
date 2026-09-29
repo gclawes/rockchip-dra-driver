@@ -30,6 +30,10 @@ const (
 	// share cap and discovery cannot infer a better value.
 	DefaultGPUMaxAllocations = 8
 
+	// DefaultVPUMaxAllocations is used when Helm does not override the VPU
+	// share cap. One claim owns the node until that cap is raised.
+	DefaultVPUMaxAllocations = 1
+
 	// TaintUnhealthy is applied with effect NoExecute when an advertised
 	// device loses its kernel driver or char device. NoExecute also blocks
 	// new scheduling. The value is TaintValueNodeMissing or
@@ -57,14 +61,27 @@ const (
 	AttrShaderCores = "shaderCores"
 	AttrDeviceNode  = "deviceNode"
 	AttrDeviceGID   = "deviceGid"
+	AttrFunction    = "function"
+	AttrBlock       = "block"
 )
 
 const (
 	TypeNPU = "npu"
 	TypeGPU = "gpu"
+	TypeVPU = "vpu"
 
 	KMDRocket  = "rocket"
 	KMDPanthor = "panthor"
+	KMDRkvdec  = "rkvdec"
+	KMDHantro  = "hantro-vpu"
+
+	FunctionDecode = "decode"
+	FunctionEncode = "encode"
+
+	BlockRkvdec    = "rkvdec"
+	BlockHantroDec = "hantro-dec"
+	BlockHantroEnc = "hantro-enc"
+	BlockHantroAV1 = "hantro-av1"
 
 	VendorRockchip = "rockchip"
 	VendorARM      = "arm"

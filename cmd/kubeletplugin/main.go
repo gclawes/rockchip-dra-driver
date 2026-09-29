@@ -56,8 +56,10 @@ type Flags struct {
 	mockDevices                   bool
 	npuEnabled                    bool
 	gpuEnabled                    bool
+	vpuEnabled                    bool
 	npuMaxAllocations             int
 	gpuMaxAllocations             int
+	vpuMaxAllocations             int
 	sysfsRoot                     string
 	devRoot                       string
 	discoveryInterval             time.Duration
@@ -142,7 +144,7 @@ func newApp() *cli.App {
 		},
 		&cli.BoolFlag{
 			Name:        "mock-devices",
-			Usage:       "Advertise a synthetic RK3588 NPU and GPU instead of reading sysfs. For kind e2e.",
+			Usage:       "Advertise a synthetic RK3588 NPU, GPU, and rkvdec instead of reading sysfs. For kind e2e.",
 			Destination: &f.mockDevices,
 			EnvVars:     []string{"MOCK_DEVICES"},
 		},
@@ -173,6 +175,20 @@ func newApp() *cli.App {
 			Value:       0,
 			Destination: &f.gpuMaxAllocations,
 			EnvVars:     []string{"GPU_MAX_ALLOCATIONS"},
+		},
+		&cli.BoolFlag{
+			Name:        "vpu-enabled",
+			Usage:       "Discover and publish VPU devices.",
+			Value:       true,
+			Destination: &f.vpuEnabled,
+			EnvVars:     []string{"VPU_ENABLED"},
+		},
+		&cli.IntFlag{
+			Name:        "vpu-max-allocations",
+			Usage:       "Maximum concurrent allocations of each VPU. 0 uses the default of 1.",
+			Value:       0,
+			Destination: &f.vpuMaxAllocations,
+			EnvVars:     []string{"VPU_MAX_ALLOCATIONS"},
 		},
 		&cli.StringFlag{
 			Name:        "sysfs-root",
@@ -278,7 +294,9 @@ func (c *Config) discoveryConfig() discovery.Config {
 		Mock:              c.flags.mockDevices,
 		NPUEnabled:        c.flags.npuEnabled,
 		GPUEnabled:        c.flags.gpuEnabled,
+		VPUEnabled:        c.flags.vpuEnabled,
 		NPUMaxAllocations: c.flags.npuMaxAllocations,
 		GPUMaxAllocations: c.flags.gpuMaxAllocations,
+		VPUMaxAllocations: c.flags.vpuMaxAllocations,
 	}
 }

@@ -38,7 +38,7 @@ func TestDevicesToResources(t *testing.T) {
 	}
 	res := devicesToResources("node-a", tracked)
 	pool, ok := res.Pools["node-a"]
-	if !ok || len(pool.Slices) != 1 || len(pool.Slices[0].Devices) != 2 {
+	if !ok || len(pool.Slices) != 1 || len(pool.Slices[0].Devices) != 3 {
 		t.Fatalf("unexpected pool: %+v", res.Pools)
 	}
 	npu := deviceByName(t, pool.Slices[0].Devices, "npu-0")
@@ -58,8 +58,16 @@ func TestDevicesToResources(t *testing.T) {
 	if _, ok := npu.Attributes[consts.AttrDeviceGID]; ok {
 		t.Fatalf("mock device should not publish a gid: %+v", npu.Attributes)
 	}
+	vpu := deviceByName(t, pool.Slices[0].Devices, "vpu-rkvdec-0")
+	assertShareRange(t, vpu.Capacity[consts.CapacityShares].RequestPolicy, 1)
+	if vpu.Capacity[consts.CapacityShares].RequestPolicy.ValidRange.Step != nil {
+		t.Fatalf("vpu step must be omitted when capacity is 1: %+v", vpu.Capacity[consts.CapacityShares].RequestPolicy)
+	}
+	if vpu.Attributes[consts.AttrBlock].StringValue == nil || *vpu.Attributes[consts.AttrBlock].StringValue != consts.BlockRkvdec {
+		t.Fatalf("unexpected vpu block: %+v", vpu.Attributes)
+	}
 	// Name order, not discovery order.
-	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" {
+	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" || pool.Slices[0].Devices[2].Name != "vpu-rkvdec-0" {
 		t.Fatalf("devices not sorted: %+v", pool.Slices[0].Devices)
 	}
 }

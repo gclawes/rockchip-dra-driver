@@ -205,9 +205,13 @@ real configuration knob. Do not invent NVIDIA-style sharing strategies.
 ## Discovery and sharing model
 
 - One NPU device and one GPU device per node (not per core).
+- VPU is one device per function block (`vpu-rkvdec-0`, `vpu-hantro-dec-0`,
+  `vpu-hantro-enc-0`, `vpu-hantro-av1-0`), not per `videoN`. Classes select
+  `block`. Do not ship a generic `vpu.rockchip.com`. Do not inject
+  `/dev/dma_heap/*`.
 - `allowMultipleAllocations: true` with Helm-tunable `maxAllocations`.
 - If Helm leaves the cap unset (`0`), use SoC-aware defaults (RK3588 NPU → 3
-  cores as a congestion heuristic; GPU → 8).
+  cores as a congestion heuristic; GPU → 8; each VPU block → 1).
 - Core count / shader core count are **attributes**, not allocatable capacity.
   Mainline rocket has no core-mask UAPI; panthor has no shader-core isolation.
 - Missing KMD: omit that device type, do not crash the plugin.

@@ -26,13 +26,15 @@ type Config struct {
 	DevRoot string
 	// Mock advertises a synthetic RK3588 NPU+GPU instead of reading sysfs.
 	Mock bool
-	// NPUEnabled / GPUEnabled skip a device class when false.
+	// NPUEnabled / GPUEnabled / VPUEnabled skip a device class when false.
 	NPUEnabled bool
 	GPUEnabled bool
-	// NPUMaxAllocations / GPUMaxAllocations override SoC-aware defaults when
-	// greater than zero.
+	VPUEnabled bool
+	// NPUMaxAllocations / GPUMaxAllocations / VPUMaxAllocations override
+	// defaults when greater than zero. VPU default is 1.
 	NPUMaxAllocations int
 	GPUMaxAllocations int
+	VPUMaxAllocations int
 }
 
 // Device is one accelerator discovered on the node.
@@ -47,6 +49,10 @@ type Device struct {
 	ShaderCores    int64
 	DeviceNode     string
 	MaxAllocations int64
+	// Function is decode or encode. Block is the stable selector
+	// (rkvdec, hantro-dec, …). Both are empty for NPU and GPU.
+	Function string
+	Block    string
 	// DeviceGID is the host group id of DeviceNode. It is set only when
 	// DeviceGIDKnown is true. Zero is a valid gid (root), so it cannot be
 	// used as the unknown sentinel.
@@ -61,10 +67,12 @@ func defaultConfig(c Config) Config {
 	if c.DevRoot == "" {
 		c.DevRoot = "/dev"
 	}
-	if !c.NPUEnabled && !c.GPUEnabled {
-		// Zero-value Config means "discover everything".
+	if !c.NPUEnabled && !c.GPUEnabled && !c.VPUEnabled {
+		// Zero-value Config means "discover everything". A caller that sets
+		// any type flag has opted into an explicit set.
 		c.NPUEnabled = true
 		c.GPUEnabled = true
+		c.VPUEnabled = true
 	}
 	return c
 }

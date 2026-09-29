@@ -39,5 +39,15 @@ if ! kubectl get deviceclass gpu.rockchip.com >/dev/null; then
 	echo "missing DeviceClass gpu.rockchip.com" >&2
 	exit 1
 fi
+for class in vpu-rkvdec.rockchip.com vpu-hantro-dec.rockchip.com vpu-hantro-enc.rockchip.com vpu-hantro-av1.rockchip.com; do
+	if ! kubectl get deviceclass "$class" >/dev/null; then
+		echo "missing DeviceClass $class" >&2
+		exit 1
+	fi
+done
+if ! kubectl get resourceslice -o json | grep -q '"rkvdec"'; then
+	echo "mock ResourceSlice missing rkvdec" >&2
+	exit 1
+fi
 
 echo "e2e checks passed"
