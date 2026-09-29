@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.4.1...0.5.0) (2026-09-29)
+
+
+### Features
+
+* **cdi:** publish device node gid ([06b5502](https://github.com/gclawes/rockchip-dra-driver/commit/06b5502357c9ebd5978d8e93e836b7d8d9ce7207))
+
 ## [0.4.1](https://github.com/gclawes/rockchip-dra-driver/compare/0.4.0...0.4.1) (2026-09-28)
 
 
