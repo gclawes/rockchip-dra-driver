@@ -82,6 +82,10 @@ spec:
           value: {{ .Values.vpu.enabled | quote }}
         - name: VPU_MAX_ALLOCATIONS
           value: {{ .Values.vpu.maxAllocations | quote }}
+        - name: RGA_ENABLED
+          value: {{ .Values.rga.enabled | quote }}
+        - name: RGA_MAX_ALLOCATIONS
+          value: {{ .Values.rga.maxAllocations | quote }}
         - name: DISCOVERY_INTERVAL
           value: {{ .Values.discoveryInterval | quote }}
         {{- if (gt (int .Values.kubeletPlugin.containers.plugin.metricsPort) 0) }}

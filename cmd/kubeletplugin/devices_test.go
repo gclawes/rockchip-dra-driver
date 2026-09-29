@@ -38,7 +38,7 @@ func TestDevicesToResources(t *testing.T) {
 	}
 	res := devicesToResources("node-a", tracked)
 	pool, ok := res.Pools["node-a"]
-	if !ok || len(pool.Slices) != 1 || len(pool.Slices[0].Devices) != 3 {
+	if !ok || len(pool.Slices) != 1 || len(pool.Slices[0].Devices) != 4 {
 		t.Fatalf("unexpected pool: %+v", res.Pools)
 	}
 	npu := deviceByName(t, pool.Slices[0].Devices, "npu-0")
@@ -67,7 +67,9 @@ func TestDevicesToResources(t *testing.T) {
 		t.Fatalf("unexpected vpu block: %+v", vpu.Attributes)
 	}
 	// Name order, not discovery order.
-	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" || pool.Slices[0].Devices[2].Name != "vpu-rkvdec-0" {
+	rga := deviceByName(t, pool.Slices[0].Devices, "rga-0")
+	assertShareRange(t, rga.Capacity[consts.CapacityShares].RequestPolicy, 1)
+	if pool.Slices[0].Devices[0].Name != "gpu-0" || pool.Slices[0].Devices[1].Name != "npu-0" || pool.Slices[0].Devices[2].Name != "rga-0" || pool.Slices[0].Devices[3].Name != "vpu-rkvdec-0" {
 		t.Fatalf("devices not sorted: %+v", pool.Slices[0].Devices)
 	}
 }

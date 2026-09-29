@@ -63,8 +63,8 @@ func TestMockEnumerateRK3588(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(devs) != 3 {
-		t.Fatalf("expected 3 devices, got %d: %+v", len(devs), devs)
+	if len(devs) != 4 {
+		t.Fatalf("expected 4 devices, got %d: %+v", len(devs), devs)
 	}
 	if devs[0].Type != consts.TypeNPU || devs[0].CoreCount != 3 || devs[0].MaxAllocations != 3 {
 		t.Fatalf("unexpected NPU: %+v", devs[0])
@@ -75,6 +75,10 @@ func TestMockEnumerateRK3588(t *testing.T) {
 	vpu := devs[2]
 	if vpu.Name != "vpu-rkvdec-0" || vpu.Block != consts.BlockRkvdec || vpu.MaxAllocations != 1 || vpu.DeviceGIDKnown {
 		t.Fatalf("unexpected VPU: %+v", vpu)
+	}
+	rga := devs[3]
+	if rga.Name != "rga-0" || rga.KMD != consts.KMDRGA || rga.MaxAllocations != 1 || rga.DeviceGIDKnown {
+		t.Fatalf("unexpected RGA: %+v", rga)
 	}
 }
 
@@ -232,6 +236,29 @@ func TestVPUSysfsClassify(t *testing.T) {
 	rkv := byName["vpu-rkvdec-0"]
 	if rkv.Block != consts.BlockRkvdec || rkv.DeviceNode != filepath.Join(devRoot, "video9") || rkv.MaxAllocations != 1 {
 		t.Fatalf("unexpected rkvdec: %+v", rkv)
+	}
+}
+
+func TestRGAIgnoresVideoIndex(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "firmware/devicetree/base/compatible"), "rockchip,rk3588\x00")
+	writeV4L(t, root, "video4", "rockchip-rga", "rockchip-rga", "rockchip,rk3588-rga\x00")
+	writeV4L(t, root, "video1", "hantro-vpu", "hantro-vpu", "rockchip,rk3588-vpu121\x00")
+	devRoot := t.TempDir()
+	writeFile(t, filepath.Join(devRoot, "video4"), "")
+
+	devs, err := Enumerate(Config{SysfsRoot: root, DevRoot: devRoot, RGAEnabled: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(devs) != 1 || devs[0].Name != "rga-0" || devs[0].Type != consts.TypeRGA {
+		t.Fatalf("unexpected devices: %+v", devs)
+	}
+	if devs[0].DeviceNode != filepath.Join(devRoot, "video4") || !devs[0].DeviceGIDKnown || devs[0].MaxAllocations != 1 {
+		t.Fatalf("unexpected rga node: %+v", devs[0])
+	}
+	if !strings.Contains(devs[0].Model, "rk3588-rga") {
+		t.Fatalf("unexpected model: %+v", devs[0])
 	}
 }
 

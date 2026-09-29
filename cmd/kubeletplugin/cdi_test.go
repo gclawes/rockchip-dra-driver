@@ -73,6 +73,21 @@ func TestDeviceEditsEnvScopedByType(t *testing.T) {
 	if slices.Contains(vpu.Env, "DRA_ROCKCHIP_VPU_DEVICE=/dev/video2") {
 		t.Fatalf("bare VPU env would collide across blocks: %v", vpu.Env)
 	}
+
+	rga := deviceEdits(discovery.Device{
+		Type:       consts.TypeRGA,
+		SoC:        "rk3588",
+		KMD:        consts.KMDRGA,
+		DeviceNode: "/dev/video0",
+	}, true)
+	wantRGA := []string{
+		"DRA_ROCKCHIP_SOC=rk3588",
+		"DRA_ROCKCHIP_RGA_KMD=rockchip-rga",
+		"DRA_ROCKCHIP_RGA_DEVICE=/dev/video0",
+	}
+	if !slices.Equal(rga.Env, wantRGA) {
+		t.Fatalf("rga env: got %v want %v", rga.Env, wantRGA)
+	}
 }
 
 func TestDeviceEditsIncludesGID(t *testing.T) {
