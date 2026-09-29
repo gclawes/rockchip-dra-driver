@@ -1,3 +1,11 @@
+# [0.7.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.6.0...0.7.0) (2026-09-29)
+
+
+### Features
+
+* **rga:** advertise rockchip-rga ([c8f8131](https://github.com/gclawes/rockchip-dra-driver/commit/c8f8131639e1572d94acfc7738cc0961b3aab4d0))
+* **vpu:** advertise mainline decoder and encoder nodes ([3aac1c8](https://github.com/gclawes/rockchip-dra-driver/commit/3aac1c8d66efd64b9e6d821d4d97846be2f81e19))
+
 # [0.6.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.5.0...0.6.0) (2026-09-29)
 
 
