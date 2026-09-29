@@ -146,10 +146,12 @@ gh pr list --state open --json number,headRefName,baseRefName \
   --jq '.[] | select(.headRefName | startswith("prep/"))'
 ```
 
-If a train is open, target that branch. Do not merge the train pull request.
-Do not squash it. A squash drops the per-commit subjects, and a `chore:`
-squash publishes nothing. A single releasing pull request still targets
-`master`. Do not open a second `prep/*` train against the same base.
+If a train is open, target that branch. Do not merge the train pull request,
+and do not mark it ready: it stays a draft until every pull that belongs in
+that version has merged. Do not squash it. A squash drops the per-commit
+subjects, and a `chore:` squash publishes nothing. A single releasing pull
+request still targets `master`. Do not open a second `prep/*` train against
+the same base.
 
 ## Watching dra-example-driver
 
