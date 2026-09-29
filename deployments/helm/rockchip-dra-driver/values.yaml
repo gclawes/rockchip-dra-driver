@@ -21,7 +21,22 @@ gpu:
     name: gpu.rockchip.com
     extendedResourceName: ""
 
-# Advertise a synthetic RK3588 NPU+GPU instead of reading sysfs.
+vpu:
+  enabled: true
+  # 0 = one allocation per VPU block. Raise only when userspace is known
+  # to share that node.
+  maxAllocations: 0
+  deviceClasses:
+    rkvdec:
+      name: vpu-rkvdec.rockchip.com
+    hantroDec:
+      name: vpu-hantro-dec.rockchip.com
+    hantroEnc:
+      name: vpu-hantro-enc.rockchip.com
+    hantroAv1:
+      name: vpu-hantro-av1.rockchip.com
+
+# Advertise a synthetic RK3588 NPU, GPU, and rkvdec instead of reading sysfs.
 # Enable for kind e2e; leave false on hardware.
 mockDevices: false
 

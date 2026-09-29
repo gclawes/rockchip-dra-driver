@@ -78,6 +78,10 @@ spec:
           value: {{ .Values.npu.maxAllocations | quote }}
         - name: GPU_MAX_ALLOCATIONS
           value: {{ .Values.gpu.maxAllocations | quote }}
+        - name: VPU_ENABLED
+          value: {{ .Values.vpu.enabled | quote }}
+        - name: VPU_MAX_ALLOCATIONS
+          value: {{ .Values.vpu.maxAllocations | quote }}
         - name: DISCOVERY_INTERVAL
           value: {{ .Values.discoveryInterval | quote }}
         {{- if (gt (int .Values.kubeletPlugin.containers.plugin.metricsPort) 0) }}

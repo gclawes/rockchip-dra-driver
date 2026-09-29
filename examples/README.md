@@ -1,10 +1,10 @@
 # Example workloads
 
-These manifests show how to claim the NPU and GPU this driver advertises.
-They are **wiring examples**, not inference demos. The containers only print
-CDI environment variables (`DRA_ROCKCHIP_SOC`, `DRA_ROCKCHIP_NPU_*`,
-`DRA_ROCKCHIP_GPU_*`) and the injected device nodes, then sleep. Swap the
-image when a rocket-capable workload image exists.
+These manifests show how to claim the NPU, GPU, and VPU this driver
+advertises. They are **wiring examples**, not inference demos. The containers
+only print CDI environment variables (`DRA_ROCKCHIP_SOC`, `DRA_ROCKCHIP_NPU_*`,
+`DRA_ROCKCHIP_GPU_*`, `DRA_ROCKCHIP_VPU_<BLOCK>_*`) and the injected device
+nodes, then sleep. Swap the image when a rocket-capable workload image exists.
 
 They use `debian:bookworm-slim`, which publishes `linux/arm64` and runs on
 RK3588. Apply them against a cluster that already has this driver installed
@@ -16,20 +16,23 @@ kubectl apply -f examples/gpu-deployment.yaml
 kubectl apply -f examples/npu-and-gpu-deployment.yaml
 kubectl apply -f examples/npu-shared-replicas.yaml
 kubectl apply -f examples/npu-exclusive.yaml
+kubectl apply -f examples/vpu-rkvdec-deployment.yaml
 ```
 
 Each example is a `Deployment` plus a `ResourceClaimTemplate`. Kubernetes
 creates one `ResourceClaim` per replica. A request that omits `shares`
 consumes one unit. Requests must be in `1..capacity` (Helm defaults: NPU
-capacity 3 on RK3588, GPU capacity 8). `npu-exclusive.yaml` requests all 3
+capacity 3 on RK3588, GPU capacity 8, each VPU block capacity 1).
+`npu-exclusive.yaml` requests all 3
 RK3588 NPU shares. Change that quantity if the published capacity differs.
 
 The containers run as root in these examples, so they can open a `0660`
-`root:render` node. A non-root container must set `supplementalGroups` to the
-host gid of each claimed device. Read it from the ResourceSlice attribute
-`deviceGid`, or from `DRA_ROCKCHIP_NPU_GID` / `DRA_ROCKCHIP_GPU_GID` in a root
-debug pod. Do not hardcode the gid: `render` and `video` differ by distro. A
-pod that claims both devices needs every distinct gid.
+`root:render` node. VPU nodes are typically `root:video`. A non-root container
+must set `supplementalGroups` to the host gid of each claimed device. Read it
+from the ResourceSlice attribute `deviceGid`, or from `DRA_ROCKCHIP_NPU_GID` /
+`DRA_ROCKCHIP_GPU_GID` / `DRA_ROCKCHIP_VPU_<BLOCK>_GID` in a root debug pod.
+Do not hardcode the gid: `render` and `video` differ by distro. A pod that
+claims both an NPU and a VPU needs every distinct gid.
 
 Check a running pod:
 
