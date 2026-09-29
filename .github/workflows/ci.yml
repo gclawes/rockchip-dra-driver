@@ -56,6 +56,8 @@ jobs:
       run: go test -v -race ./...
     - name: Test release-train version script
       run: bash hack/next-release-version_test.sh
+    - name: Test release included renderer
+      run: bash hack/render-release-included_test.sh
 
   e2e:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
