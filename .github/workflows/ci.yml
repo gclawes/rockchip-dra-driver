@@ -16,7 +16,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, 'prep/**']
   pull_request:
 
 concurrency:
@@ -54,6 +54,8 @@ jobs:
         go-version-file: go.mod
     - name: Test
       run: go test -v -race ./...
+    - name: Test release-train version script
+      run: bash hack/next-release-version_test.sh
 
   e2e:
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
@@ -79,3 +81,23 @@ jobs:
     - name: Teardown e2e test
       if: always()
       run: make teardown-e2e
+
+  # Always reports a result, including on pull requests that are not trains.
+  # The master ruleset requires this check. Skipping the job would block those
+  # pulls, because a missing required check does not count as success.
+  release-train:
+    runs-on: ubuntu-24.04-arm
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Fetch base and tags
+      if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'prep/')
+      run: git fetch origin "${{ github.base_ref }}" --tags
+    - name: Check prep branch version
+      env:
+        RELEASE_TRAIN_EVENT: ${{ github.event_name }}
+        RELEASE_TRAIN_HEAD: ${{ github.head_ref }}
+        RELEASE_TRAIN_BASE: ${{ github.base_ref }}
+      run: bash hack/check-release-train.sh

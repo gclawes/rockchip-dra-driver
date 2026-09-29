@@ -132,6 +132,25 @@ API.
 manually when the API is stable (typically with an intentional `feat!` /
 `BREAKING CHANGE:` commit).
 
+### Release trains
+
+semantic-release publishes when a `feat` or `fix` reaches `master`. It does
+not publish from `prep/*`. Several releasing pulls that should share a
+version go on `prep/X.Y.Z` and merge to `master` once. See
+[CONTRIBUTING.md](CONTRIBUTING.md#release-trains).
+
+Before opening a `feat` or `fix` pull request:
+
+```sh
+gh pr list --state open --json number,headRefName,baseRefName \
+  --jq '.[] | select(.headRefName | startswith("prep/"))'
+```
+
+If a train is open, target that branch. Do not merge the train pull request.
+Do not squash it. A squash drops the per-commit subjects, and a `chore:`
+squash publishes nothing. A single releasing pull request still targets
+`master`. Do not open a second `prep/*` train against the same base.
+
 ## Watching dra-example-driver
 
 This project started from the structure of

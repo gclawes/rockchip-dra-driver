@@ -101,9 +101,10 @@ Kind e2e (`make setup-e2e test-e2e teardown-e2e`) needs the host container
 engine. CI runs it with mock devices.
 
 Releases are automated with [semantic-release](https://semantic-release.org/)
-from Angular conventional commits (`feat:`, `fix:`, …). See
-[CONTRIBUTING.md](CONTRIBUTING.md) for the commit format and what cuts a
-version.
+from Angular conventional commits (`feat:`, `fix:`, …). A single releasing
+pull request merged to `master` publishes immediately. Several that should
+share a version land on a `prep/X.Y.Z` branch first. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the commit format and the train.
 
 ## License
 

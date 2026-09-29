@@ -16,6 +16,9 @@ name: Semantic Release
 
 on:
   push:
+    # Publishing branches only. Do not add prep/**. That is an integration
+    # branch: semantic-release runs when it merges here, or to an N.x /
+    # N.N.x line, and not on each feature merged into the train.
     branches:
       - master
       - main
