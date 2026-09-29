@@ -37,6 +37,9 @@ func Enumerate(cfg Config) ([]Device, error) {
 	if cfg.VPUEnabled {
 		devices = append(devices, discoverVPU(cfg, soc)...)
 	}
+	if cfg.RGAEnabled {
+		devices = append(devices, discoverRGA(cfg, soc)...)
+	}
 	return devices, nil
 }
 
@@ -94,6 +97,24 @@ func mockDevices(cfg Config) []Device {
 			Function:       consts.FunctionDecode,
 			Block:          consts.BlockRkvdec,
 			DeviceNode:     "/dev/video2",
+			MaxAllocations: maxAlloc,
+		})
+	}
+	if cfg.RGAEnabled {
+		maxAlloc := int64(cfg.RGAMaxAllocations)
+		if maxAlloc <= 0 {
+			maxAlloc = consts.DefaultRGAMaxAllocations
+		}
+		// video0 matches the rockchip-rga node observed on rk04. The index
+		// is not stable; mock mode never opens it.
+		devices = append(devices, Device{
+			Name:           "rga-0",
+			Type:           consts.TypeRGA,
+			SoC:            soc,
+			Vendor:         consts.VendorRockchip,
+			Model:          "rockchip,rk3588-rga",
+			KMD:            consts.KMDRGA,
+			DeviceNode:     "/dev/video0",
 			MaxAllocations: maxAlloc,
 		})
 	}

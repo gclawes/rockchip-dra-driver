@@ -57,9 +57,11 @@ type Flags struct {
 	npuEnabled                    bool
 	gpuEnabled                    bool
 	vpuEnabled                    bool
+	rgaEnabled                    bool
 	npuMaxAllocations             int
 	gpuMaxAllocations             int
 	vpuMaxAllocations             int
+	rgaMaxAllocations             int
 	sysfsRoot                     string
 	devRoot                       string
 	discoveryInterval             time.Duration
@@ -144,7 +146,7 @@ func newApp() *cli.App {
 		},
 		&cli.BoolFlag{
 			Name:        "mock-devices",
-			Usage:       "Advertise a synthetic RK3588 NPU, GPU, and rkvdec instead of reading sysfs. For kind e2e.",
+			Usage:       "Advertise a synthetic RK3588 NPU, GPU, rkvdec, and RGA instead of reading sysfs. For kind e2e.",
 			Destination: &f.mockDevices,
 			EnvVars:     []string{"MOCK_DEVICES"},
 		},
@@ -189,6 +191,20 @@ func newApp() *cli.App {
 			Value:       0,
 			Destination: &f.vpuMaxAllocations,
 			EnvVars:     []string{"VPU_MAX_ALLOCATIONS"},
+		},
+		&cli.BoolFlag{
+			Name:        "rga-enabled",
+			Usage:       "Discover and publish RGA devices.",
+			Value:       true,
+			Destination: &f.rgaEnabled,
+			EnvVars:     []string{"RGA_ENABLED"},
+		},
+		&cli.IntFlag{
+			Name:        "rga-max-allocations",
+			Usage:       "Maximum concurrent RGA allocations. 0 uses the default of 1.",
+			Value:       0,
+			Destination: &f.rgaMaxAllocations,
+			EnvVars:     []string{"RGA_MAX_ALLOCATIONS"},
 		},
 		&cli.StringFlag{
 			Name:        "sysfs-root",
@@ -295,8 +311,10 @@ func (c *Config) discoveryConfig() discovery.Config {
 		NPUEnabled:        c.flags.npuEnabled,
 		GPUEnabled:        c.flags.gpuEnabled,
 		VPUEnabled:        c.flags.vpuEnabled,
+		RGAEnabled:        c.flags.rgaEnabled,
 		NPUMaxAllocations: c.flags.npuMaxAllocations,
 		GPUMaxAllocations: c.flags.gpuMaxAllocations,
 		VPUMaxAllocations: c.flags.vpuMaxAllocations,
+		RGAMaxAllocations: c.flags.rgaMaxAllocations,
 	}
 }

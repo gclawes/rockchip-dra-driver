@@ -8,6 +8,7 @@ The first supported SoC is the **RK3588**, advertising:
 - **NPU** via the mainline [`accel/rocket`](https://docs.kernel.org/accel/rocket/index.html) driver (`/dev/accel/accel*`)
 - **GPU** via the mainline `panthor` DRM driver (Mali-G610 render node)
 - **VPU** via mainline `rkvdec` and `hantro-vpu` (`/dev/video*`), one device per block rather than per video index
+- **RGA** via mainline `rockchip-rga` (`/dev/video*`), one device, not a video index
 
 The driver is **mainline-only**. It does not support the proprietary Rockchip
 `rknpu` kernel module or RKNN-Toolkit2. CPU cores are out of scope; use
@@ -45,13 +46,15 @@ Helm knobs:
 | `gpu.maxAllocations` | `0` (default 8) | Concurrent GPU claim cap |
 | `vpu.enabled` | `true` | Publish VPU devices |
 | `vpu.maxAllocations` | `0` (default 1 per block) | Concurrent claims of each VPU |
+| `rga.enabled` | `true` | Publish the RGA device |
+| `rga.maxAllocations` | `0` (default 1) | Concurrent RGA claims. The kernel serializes jobs, so this may be raised |
 | `mockDevices` | `false` | Fake RK3588 devices for kind |
 | `discoveryInterval` | `10s` | How often to re-read sysfs. Keep this under 30s |
 
 DeviceClasses: `npu.rockchip.com`, `gpu.rockchip.com`, and, when VPU
 discovery is enabled, `vpu-rkvdec.rockchip.com`,
 `vpu-hantro-dec.rockchip.com`, `vpu-hantro-enc.rockchip.com`,
-`vpu-hantro-av1.rockchip.com`. There is no generic `vpu.rockchip.com`.
+`vpu-hantro-av1.rockchip.com`, and `rga.rockchip.com`. There is no generic `vpu.rockchip.com`.
 Hantro decode and AV1 decode share a driver, so classes select
 `type == vpu && block == …`. Driver name: `dra.rockchip.com`.
 
@@ -69,7 +72,7 @@ failed prepares still apply on 1.35.
 
 Char devices are injected with the host mode and owner. On a typical board
 the NPU and GPU nodes are mode `0660` and group `render`. VPU nodes are
-typically group `video`. The gid is not
+typically group `video`, as is the RGA node. The gid is not
 stable across distros, so this driver does not chmod the node and does not
 guess a supplemental group. When the node exists, the ResourceSlice attribute
 `deviceGid` and a CDI variable carry the host gid. NPU and GPU use
@@ -91,7 +94,7 @@ A claim that omits `shares` gets 1. Requests must fall in `1..capacity`
 is how to take the device exclusively. There is no core-mask UAPI.
 
 Deployable `Deployment` examples (NPU, GPU, both, shared NPU replicas, an
-exclusive NPU claim, and an rkvdec claim) are in [`examples/`](examples/).
+exclusive NPU claim, an rkvdec claim, and an RGA claim) are in [`examples/`](examples/).
 
 ## Development
 

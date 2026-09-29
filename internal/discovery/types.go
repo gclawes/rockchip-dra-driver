@@ -24,17 +24,20 @@ type Config struct {
 	SysfsRoot string
 	// DevRoot is the mount of /dev (default /dev).
 	DevRoot string
-	// Mock advertises a synthetic RK3588 NPU+GPU instead of reading sysfs.
+	// Mock advertises synthetic RK3588 devices instead of reading sysfs.
 	Mock bool
-	// NPUEnabled / GPUEnabled / VPUEnabled skip a device class when false.
+	// NPUEnabled / GPUEnabled / VPUEnabled / RGAEnabled skip a device class
+	// when false.
 	NPUEnabled bool
 	GPUEnabled bool
 	VPUEnabled bool
-	// NPUMaxAllocations / GPUMaxAllocations / VPUMaxAllocations override
-	// defaults when greater than zero. VPU default is 1.
+	RGAEnabled bool
+	// Max allocation overrides apply when greater than zero. VPU and RGA
+	// default to 1.
 	NPUMaxAllocations int
 	GPUMaxAllocations int
 	VPUMaxAllocations int
+	RGAMaxAllocations int
 }
 
 // Device is one accelerator discovered on the node.
@@ -67,12 +70,13 @@ func defaultConfig(c Config) Config {
 	if c.DevRoot == "" {
 		c.DevRoot = "/dev"
 	}
-	if !c.NPUEnabled && !c.GPUEnabled && !c.VPUEnabled {
+	if !c.NPUEnabled && !c.GPUEnabled && !c.VPUEnabled && !c.RGAEnabled {
 		// Zero-value Config means "discover everything". A caller that sets
 		// any type flag has opted into an explicit set.
 		c.NPUEnabled = true
 		c.GPUEnabled = true
 		c.VPUEnabled = true
+		c.RGAEnabled = true
 	}
 	return c
 }
