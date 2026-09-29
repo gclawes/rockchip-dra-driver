@@ -15,8 +15,8 @@
 # limitations under the License.
 
 # Required CI check for every pull request. Exits 0 unless the head branch
-# is prep/X.Y.Z. On a train PR it fails until the branch name matches the
-# version those commits would publish and docs/release-train.md is gone.
+# is prep/X.Y.Z. On a train PR it fails unless the branch name matches the
+# version those commits would publish.
 #
 # Environment (set by CI):
 #   RELEASE_TRAIN_EVENT  pull_request or push
@@ -53,11 +53,6 @@ if [ -z "$base" ]; then
 fi
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-if [ -f "${root}/docs/release-train.md" ]; then
-	echo "delete docs/release-train.md before merging this train" >&2
-	exit 1
-fi
-
 expected=${head#prep/}
 base_ref="origin/${base}"
 if ! git rev-parse --verify --quiet "${base_ref}^{commit}" >/dev/null; then

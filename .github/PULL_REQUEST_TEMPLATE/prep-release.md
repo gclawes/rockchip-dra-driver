@@ -23,7 +23,6 @@ The pre-release image for this pull request is tagged from `git describe` plus t
 ## Checklist
 
 - [ ] Branch name is `prep/<version>` and `hack/next-release-version.sh` prints that version for this base
-- [ ] `docs/release-train.md` is deleted
 - [ ] Dependabot `fix(deps)` pulls that belong in this version are retargeted here (`gh pr edit <n> --base prep/<version>`)
 - [ ] No other `feat` / `fix` / `perf` pull request is about to merge to the base ahead of this one
 - [ ] Pre-release image from this pull request was tested, if this train needs a cluster check

@@ -64,18 +64,18 @@ version you expect, not a channel semantic-release reads.
 | only `fix:` / `perf:` / `revert:` | next patch, today `prep/0.6.1` |
 | `feat!` or `BREAKING CHANGE:` | do not open a train |
 
-1. Branch `prep/X.Y.Z` from `origin/master`. The first commit adds
-   `docs/release-train.md` so GitHub will open a pull request. An empty
-   branch has no diff, and GitHub refuses it. That file lists the
-   anticipated version and the pulls you expect. The commit is
-   `docs: open release train X.Y.Z`. It does not change the version.
-2. Open a **draft** pull request into `master`. Use
+1. Branch `prep/X.Y.Z` from `origin/master` and push it. Feature and fix
+   pulls can target that branch immediately. GitHub will not open a pull
+   request until the branch has a diff, so do not open one yet.
+2. After the first releasing commit is on the branch, open a **draft**
+   pull request into `master`. Use
    [`.github/PULL_REQUEST_TEMPLATE/prep-release.md`](.github/PULL_REQUEST_TEMPLATE/prep-release.md)
    (`gh pr create --draft --body-file` that file, or the template dropdown).
-   Title: `chore: release X.Y.Z`. A draft cannot be merged.
-3. Target feature and fix pulls at `prep/X.Y.Z`, not `master`. Squashing
-   each of those into the train is fine. Each should already be one
-   conventional commit.
+   Title: `chore: release X.Y.Z`. Leave it a draft until the set is
+   complete. A draft cannot be merged.
+3. Target later feature and fix pulls at `prep/X.Y.Z`, not `master`.
+   Squashing each of those into the train is fine. Each should already be
+   one conventional commit.
 4. Retarget Dependabot pulls that belong in this version:
    `gh pr edit <n> --base prep/X.Y.Z`. Do not set `target-branch` in
    `dependabot.yml`. New Dependabot pulls keep opening against `master`.
@@ -86,11 +86,10 @@ version you expect, not a channel semantic-release reads.
 6. CI and the pre-release image run on the train pull request, the same as
    any other pull request. The image tag is `git describe` plus the pull
    request number, not `X.Y.Z`.
-7. When the set is complete, delete `docs/release-train.md` (`docs: close
-   release train notes`). The `release-train` check stays red until that
-   file is gone and the branch name matches the commits. Mark the pull
-   request ready and merge it with a **merge commit**. Rebase-merge only
-   if the train is linear. Never squash.
+7. When the set is complete, confirm the `release-train` check is green
+   (the branch name matches the commits). Mark the pull request ready and
+   merge it with a **merge commit**. Rebase-merge only if the train is
+   linear. Never squash.
 8. Delete `prep/X.Y.Z` after the merge. Closing the pull request deletes
    its `*-pr-<n>` preview tags. Deleting the branch deletes
    `*-branch-prep-X-Y-Z` tags.
