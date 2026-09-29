@@ -1,0 +1,67 @@
+# Copyright 2026 Graeme Lawes
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Release train warning
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches:
+      - master
+      - main
+      - '[0-9]+.x'
+      - '[0-9]+.[0-9]+.x'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  warn:
+    # A comment, not a required check. An urgent fix can still merge to the
+    # base on purpose and publish on its own.
+    if: startsWith(github.event.pull_request.title, 'feat') || startsWith(github.event.pull_request.title, 'fix') || startsWith(github.event.pull_request.title, 'perf') || startsWith(github.event.pull_request.title, 'revert')
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Comment when a train is open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          case "$HEAD" in
+            prep/*) exit 0 ;;
+          esac
+          trains=$(gh pr list --repo "$GITHUB_REPOSITORY" --base "$BASE" --state open --limit 20 \
+            --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("prep/")) | "\(.headRefName) (#\(.number))"')
+          if [ -z "$trains" ]; then
+            exit 0
+          fi
+          existing=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --jq '[.[] | select(.body | contains("release-train-warning"))] | length')
+          if [ "$existing" != 0 ]; then
+            exit 0
+          fi
+          {
+            echo '<!-- release-train-warning -->'
+            echo "A release train is open against \`${BASE}\`:"
+            echo
+            echo "$trains" | sed 's/^/- /'
+            echo
+            echo "Merging this pull request to \`${BASE}\` publishes it immediately, separate from that train."
+            echo "Retarget it onto the train if it belongs in that version. Merge here only if it should publish on its own."
+          } | gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file -

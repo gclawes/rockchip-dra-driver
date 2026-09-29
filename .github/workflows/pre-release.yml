@@ -47,6 +47,8 @@ jobs:
       - name: Check if skip
         if: github.event_name == 'workflow_dispatch'
         run: |
+          # prep/X.Y.Z is not in this list. A manual build of a train branch is
+          # a preview image, not a release.
           PRIMARY_REGEX="^(master|main|next|next-major|alpha|beta|[0-9]+(\.[0-9]+)?(\.x)?)$"
           if [[ "${{ github.ref_name }}" =~ $PRIMARY_REGEX ]]; then
             echo "Skipping pre-release build on primary/maintenance branch"

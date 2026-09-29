@@ -65,6 +65,7 @@ vet:
 
 test:
 	go test -v -race ./...
+	bash hack/next-release-version_test.sh
 
 setup-e2e:
 	test/e2e/setup-e2e.sh
