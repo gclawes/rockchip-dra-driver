@@ -34,6 +34,10 @@ const (
 	// share cap. One claim owns the node until that cap is raised.
 	DefaultVPUMaxAllocations = 1
 
+	// DefaultRGAMaxAllocations is used when Helm does not override the RGA
+	// share cap. The kernel serializes jobs, so the cap may be raised.
+	DefaultRGAMaxAllocations = 1
+
 	// TaintUnhealthy is applied with effect NoExecute when an advertised
 	// device loses its kernel driver or char device. NoExecute also blocks
 	// new scheduling. The value is TaintValueNodeMissing or
@@ -69,11 +73,13 @@ const (
 	TypeNPU = "npu"
 	TypeGPU = "gpu"
 	TypeVPU = "vpu"
+	TypeRGA = "rga"
 
 	KMDRocket  = "rocket"
 	KMDPanthor = "panthor"
 	KMDRkvdec  = "rkvdec"
 	KMDHantro  = "hantro-vpu"
+	KMDRGA     = "rockchip-rga"
 
 	FunctionDecode = "decode"
 	FunctionEncode = "encode"

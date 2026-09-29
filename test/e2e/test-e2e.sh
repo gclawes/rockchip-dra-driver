@@ -49,5 +49,13 @@ if ! kubectl get resourceslice -o json | grep -q '"rkvdec"'; then
 	echo "mock ResourceSlice missing rkvdec" >&2
 	exit 1
 fi
+if ! kubectl get deviceclass rga.rockchip.com >/dev/null; then
+	echo "missing DeviceClass rga.rockchip.com" >&2
+	exit 1
+fi
+if ! kubectl get resourceslice -o json | grep -q 'rockchip-rga'; then
+	echo "mock ResourceSlice missing rockchip-rga" >&2
+	exit 1
+fi
 
 echo "e2e checks passed"

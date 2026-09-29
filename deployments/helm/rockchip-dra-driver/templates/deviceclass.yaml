@@ -47,3 +47,14 @@ spec:
       expression: "device.driver == '{{ $driver }}' && device.attributes['{{ $driver }}'].type == 'vpu' && device.attributes['{{ $driver }}'].block == '{{ .block }}'"
 {{- end }}
 {{- end }}
+{{- if .Values.rga.enabled }}
+---
+apiVersion: {{ include "rockchip-dra-driver.resourceApiVersion" . }}
+kind: DeviceClass
+metadata:
+  name: {{ .Values.rga.deviceClass.name }}
+spec:
+  selectors:
+  - cel:
+      expression: "device.driver == '{{ include "rockchip-dra-driver.driverName" . }}' && device.attributes['{{ include "rockchip-dra-driver.driverName" . }}'].type == 'rga'"
+{{- end }}

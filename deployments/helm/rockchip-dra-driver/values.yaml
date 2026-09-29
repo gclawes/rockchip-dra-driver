@@ -36,7 +36,14 @@ vpu:
     hantroAv1:
       name: vpu-hantro-av1.rockchip.com
 
-# Advertise a synthetic RK3588 NPU, GPU, and rkvdec instead of reading sysfs.
+rga:
+  enabled: true
+  # 0 = one allocation. The kernel serializes jobs, so this may be raised.
+  maxAllocations: 0
+  deviceClass:
+    name: rga.rockchip.com
+
+# Advertise a synthetic RK3588 NPU, GPU, rkvdec, and RGA instead of reading sysfs.
 # Enable for kind e2e; leave false on hardware.
 mockDevices: false
 
