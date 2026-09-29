@@ -103,8 +103,16 @@ func uidString(id *types.UID) string {
 	return string(*id)
 }
 
-func deviceEdits(d discovery.Device, mock bool) cdispec.ContainerEdits {
+func cdiEnvPrefix(d discovery.Device) string {
 	prefix := "DRA_ROCKCHIP_" + strings.ToUpper(d.Type)
+	if d.Block != "" {
+		prefix += "_" + strings.ToUpper(strings.ReplaceAll(d.Block, "-", "_"))
+	}
+	return prefix
+}
+
+func deviceEdits(d discovery.Device, mock bool) cdispec.ContainerEdits {
+	prefix := cdiEnvPrefix(d)
 	edits := cdispec.ContainerEdits{
 		Env: []string{
 			fmt.Sprintf("DRA_ROCKCHIP_SOC=%s", d.SoC),

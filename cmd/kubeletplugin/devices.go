@@ -69,6 +69,12 @@ func toResourceDevice(td trackedDevice) resourceapi.Device {
 	if d.ShaderCores > 0 {
 		attrs[consts.AttrShaderCores] = resourceapi.DeviceAttribute{IntValue: ptr.To(d.ShaderCores)}
 	}
+	if d.Function != "" {
+		attrs[consts.AttrFunction] = resourceapi.DeviceAttribute{StringValue: ptr.To(d.Function)}
+	}
+	if d.Block != "" {
+		attrs[consts.AttrBlock] = resourceapi.DeviceAttribute{StringValue: ptr.To(d.Block)}
+	}
 
 	shares := resource.NewQuantity(d.MaxAllocations, resource.DecimalSI)
 	dev := resourceapi.Device{

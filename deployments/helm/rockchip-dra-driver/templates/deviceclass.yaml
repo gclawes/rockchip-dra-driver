@@ -26,3 +26,24 @@ spec:
   extendedResourceName: {{ . | quote }}
   {{- end }}
 {{- end }}
+{{- if .Values.vpu.enabled }}
+{{- $driver := include "rockchip-dra-driver.driverName" . }}
+{{- $api := include "rockchip-dra-driver.resourceApiVersion" . }}
+{{- $blocks := list
+  (dict "name" .Values.vpu.deviceClasses.rkvdec.name "block" "rkvdec")
+  (dict "name" .Values.vpu.deviceClasses.hantroDec.name "block" "hantro-dec")
+  (dict "name" .Values.vpu.deviceClasses.hantroEnc.name "block" "hantro-enc")
+  (dict "name" .Values.vpu.deviceClasses.hantroAv1.name "block" "hantro-av1")
+}}
+{{- range $blocks }}
+---
+apiVersion: {{ $api }}
+kind: DeviceClass
+metadata:
+  name: {{ .name }}
+spec:
+  selectors:
+  - cel:
+      expression: "device.driver == '{{ $driver }}' && device.attributes['{{ $driver }}'].type == 'vpu' && device.attributes['{{ $driver }}'].block == '{{ .block }}'"
+{{- end }}
+{{- end }}

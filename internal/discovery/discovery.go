@@ -34,6 +34,9 @@ func Enumerate(cfg Config) ([]Device, error) {
 	if cfg.GPUEnabled {
 		devices = append(devices, discoverGPU(cfg, soc)...)
 	}
+	if cfg.VPUEnabled {
+		devices = append(devices, discoverVPU(cfg, soc)...)
+	}
 	return devices, nil
 }
 
@@ -71,6 +74,26 @@ func mockDevices(cfg Config) []Device {
 			KMD:            consts.KMDPanthor,
 			ShaderCores:    4,
 			DeviceNode:     "/dev/dri/renderD128",
+			MaxAllocations: maxAlloc,
+		})
+	}
+	if cfg.VPUEnabled {
+		maxAlloc := int64(cfg.VPUMaxAllocations)
+		if maxAlloc <= 0 {
+			maxAlloc = consts.DefaultVPUMaxAllocations
+		}
+		// video2 matches the rkvdec node observed on rk04. The index is not
+		// stable; mock mode never opens it.
+		devices = append(devices, Device{
+			Name:           "vpu-rkvdec-0",
+			Type:           consts.TypeVPU,
+			SoC:            soc,
+			Vendor:         consts.VendorRockchip,
+			Model:          "rockchip,rk3588-vdec",
+			KMD:            consts.KMDRkvdec,
+			Function:       consts.FunctionDecode,
+			Block:          consts.BlockRkvdec,
+			DeviceNode:     "/dev/video2",
 			MaxAllocations: maxAlloc,
 		})
 	}
