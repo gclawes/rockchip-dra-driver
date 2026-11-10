@@ -1,3 +1,10 @@
+## [0.7.1](https://github.com/gclawes/rockchip-dra-driver/compare/0.7.0...0.7.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **deps:** bump the kubernetes group with 5 updates ([64105ac](https://github.com/gclawes/rockchip-dra-driver/commit/64105ac4cff56f69af055a09dd1a8bdc567d5610))
+
 # [0.7.0](https://github.com/gclawes/rockchip-dra-driver/compare/0.6.0...0.7.0) (2026-09-29)
 
 
