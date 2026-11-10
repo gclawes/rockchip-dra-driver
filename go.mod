@@ -3,7 +3,7 @@ module github.com/gclawes/rockchip-dra-driver
 go 1.26.0
 
 require (
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/urfave/cli/v2 v2.27.7
 	k8s.io/api v0.37.2
 	k8s.io/apimachinery v0.37.2
